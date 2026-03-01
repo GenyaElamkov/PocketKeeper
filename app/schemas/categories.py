@@ -1,12 +1,6 @@
 import uuid
-from enum import Enum
 from pydantic import BaseModel, Field, ConfigDict
 
-
-
-class CategoryType(str, Enum):
-    income = "расходы"
-    expense = "доходы"
 
 
 class CategoryCreate(BaseModel):
@@ -19,13 +13,10 @@ class CategoryCreate(BaseModel):
         max_length=50,
         description="Название категории (от 3 до 50 символов)",
     )
-    type: CategoryType = Field(
-        ...,
-        description="Тип категории (доходы или расходы)",
-    )
     icon: str | None = Field(
         None,
         description="Ссылка на иконку категории (опционально)",
+        max_length=200,
     )
     parent_id: uuid.UUID | None = Field(
         None,
@@ -37,6 +28,6 @@ class Category(CategoryCreate):
     """
     Модель для представления категории
     """
-    id: str
+    id: uuid.UUID = Field(..., description="Уникальный идентификатор категории")
 
     model_config = ConfigDict(from_attributes=True)
