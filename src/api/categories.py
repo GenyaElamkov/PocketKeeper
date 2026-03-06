@@ -1,7 +1,6 @@
 import uuid
 from fastapi import APIRouter, status
 from schemas.categories import CategoryCreate, Category
-from models.categories import categories_bd 
 
 
 router = APIRouter(
@@ -12,22 +11,12 @@ router = APIRouter(
 
 @router.get("/", name="Получить все категории", response_model=list[Category], status_code=status.HTTP_200_OK)
 async def get_all_categories() -> list[Category]:
-    # return {"message": "Список всех категорий (загл ушка)"}
-    return categories_bd
+    return {"message": "Список всех категорий (загл ушка)"}
 
 
 @router.post("/", name="Создать новую категорию", response_model=Category, status_code=status.HTTP_201_CREATED)
 async def create_category(pyload: CategoryCreate) -> Category:
-    # return {"message": "Категория создана (заглушка)"}
-    new_id = uuid.uuid4()
-    category = {
-        "id": new_id,
-        "name": pyload.name,
-        "icon": pyload.icon,
-        "parent_id": pyload.parent_id,
-    }
-    categories_bd.append(category)
-    return category
+    return {"message": "Категория создана (заглушка)"}
 
 
 @router.put("/{category_id}", name="Обновить категорию")

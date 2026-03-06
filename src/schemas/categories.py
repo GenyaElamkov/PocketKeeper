@@ -15,7 +15,7 @@ class CategoryCreate(BaseModel):
     )
     icon: str | None = Field(
         None,
-        description="Ссылка на иконку категории (опционально)",
+        description="Ссылка на иконку категории (опционально)", 
         max_length=200,
     )
     parent_id: uuid.UUID | None = Field(

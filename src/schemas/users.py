@@ -9,7 +9,6 @@ class UserCreate(BaseModel):
     email: EmailStr = Field(..., description="Email для входа")
     hashed_password: SecretStr = Field(..., description="Хеш пароля")
     full_name: str = Field(..., description="Полное имя пользователя")
-    family_id: uuid.UUID = Field(..., description="ID семьи, к которой принадлежит пользователь")
     is_active: bool = Field(default=True, description="Активен ли аккаунт")
     created_at: datetime = Field(..., description="Дата регистрации")
 
