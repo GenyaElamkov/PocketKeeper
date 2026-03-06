@@ -1,6 +1,6 @@
 import uuid
-from fastapi import APIRouter
 
+from fastapi import APIRouter
 
 router = APIRouter(
     prefix="/accounts",
@@ -26,4 +26,3 @@ async def update_account(account_id: uuid.UUID) -> dict:
 @router.delete("/{account_id}", name="Удалить счет")
 async def delete_account(account_id: uuid.UUID) -> dict:
     return {"message": f"Счет с ID {account_id} удалена (заглушка)"}
-

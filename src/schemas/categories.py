@@ -1,6 +1,6 @@
 import uuid
-from pydantic import BaseModel, Field, ConfigDict
 
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class CategoryCreate(BaseModel):
@@ -15,7 +15,7 @@ class CategoryCreate(BaseModel):
     )
     icon: str | None = Field(
         None,
-        description="Ссылка на иконку категории (опционально)", 
+        description="Ссылка на иконку категории (опционально)",
         max_length=200,
     )
     parent_id: uuid.UUID | None = Field(
@@ -28,6 +28,6 @@ class Category(CategoryCreate):
     """
     Модель для представления категории
     """
-    id: uuid.UUID = Field(..., description="Уникальный идентификатор категории")
+    id: uuid.UUID = Field(..., description="Уникальный идентификатор категории")    # noqa
 
     model_config = ConfigDict(from_attributes=True)

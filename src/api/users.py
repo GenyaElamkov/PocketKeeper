@@ -1,6 +1,6 @@
 import uuid
-from fastapi import APIRouter
 
+from fastapi import APIRouter
 
 router = APIRouter(
     prefix="/users",
@@ -26,4 +26,3 @@ async def update_user(user_id: uuid.UUID) -> dict:
 @router.delete("/{user_id}", name="Удалить пользователя")
 async def delete_user(user_id: uuid.UUID) -> dict:
     return {"message": f"Пользователь с ID {user_id} удалена (заглушка)"}
-

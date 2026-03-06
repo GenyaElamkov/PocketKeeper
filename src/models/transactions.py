@@ -1,15 +1,16 @@
 import uuid
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
-from sqlalchemy import ForeignKey, String, DATE, DECIMAL, TIMESTAMP
+
+from sqlalchemy import DATE, DECIMAL, TIMESTAMP, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from src.database import Base
 
-
 if TYPE_CHECKING:
-    from src.models.categories import Category
     from src.models.accounts import Account
+    from src.models.categories import Category
     from src.models.users import User
 
 
@@ -20,7 +21,7 @@ class Transaction(Base):
     account_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("accounts.id"), nullable=False)
     category_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("categories.id"), nullable=False)
     ammount: Mapped[Decimal] = mapped_column(DECIMAL(10, 2), nullable=False)
-    type: Mapped[str] = mapped_column(nullable=False)
+    type: Mapped[str] = mapped_column(nullable=False)   # noqa
     description: Mapped[str | None] = mapped_column(String(200), nullable=True)
     date: Mapped[date] = mapped_column(DATE, nullable=False)
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=False)

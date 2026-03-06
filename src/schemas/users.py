@@ -1,10 +1,10 @@
 import uuid
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, EmailStr, SecretStr
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, SecretStr
 
 
-
-class UserCreate(BaseModel): 
+class UserCreate(BaseModel):
     """Модель для создания пользователя"""
     email: EmailStr = Field(..., description="Email для входа")
     hashed_password: SecretStr = Field(..., description="Хеш пароля")
@@ -15,6 +15,6 @@ class UserCreate(BaseModel):
 
 class User(UserCreate):
     """Модель для вывода пользователя"""
-    id: uuid.UUID = Field(..., description="Уникальный индефикатор пользователя")
-   
+    id: uuid.UUID = Field(..., description="Уникальный индефикатор пользователя")   # noqa
+
     model_config = ConfigDict(from_attributes=True)

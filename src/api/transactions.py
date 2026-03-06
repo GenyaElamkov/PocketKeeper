@@ -1,6 +1,6 @@
 import uuid
-from fastapi import APIRouter
 
+from fastapi import APIRouter
 
 router = APIRouter(
     prefix="/transactions",
@@ -26,4 +26,3 @@ async def update_transaction(transaction_id: uuid.UUID) -> dict:
 @router.delete("/{transaction_id}", name="Удалить транзакцию")
 async def delete_transaction(transaction_id: uuid.UUID) -> dict:
     return {"message": f"Транзакция с ID {transaction_id} удалена (заглушка)"}
-

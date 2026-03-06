@@ -1,6 +1,8 @@
 from datetime import datetime
-from sqlalchemy import String, BOOLEAN, TIMESTAMP
+
+from sqlalchemy import BOOLEAN, TIMESTAMP, String
 from sqlalchemy.orm import Mapped, mapped_column
+
 from src.database import Base
 
 

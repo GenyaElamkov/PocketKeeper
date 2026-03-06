@@ -1,7 +1,8 @@
 import uuid
-from fastapi import APIRouter, status
-from schemas.categories import CategoryCreate, Category
 
+from fastapi import APIRouter, status
+
+from schemas.categories import Category, CategoryCreate
 
 router = APIRouter(
     prefix="/categories",
@@ -27,5 +28,3 @@ async def update_category(category_id: uuid.UUID) -> Category:
 @router.delete("/{category_id}", name="Удалить категорию")
 async def delete_category(category_id: uuid.UUID) -> dict:
     return {"message": f"Категория с ID {category_id} удалена (заглушка)"}
-
-

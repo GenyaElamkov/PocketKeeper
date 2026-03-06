@@ -1,6 +1,7 @@
-from decimal import Decimal
 import uuid
+from decimal import Decimal
 from enum import Enum
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -27,7 +28,7 @@ class AccountsCreate(BaseModel):
         description="Название счета (например, 'Кошелек')",
         max_length=100,
     )
-    type: AccountType = Field(..., description="Тип счета (cash, card, deposit)")
+    type: AccountType = Field(..., description="Тип счета (cash, card, deposit)") # noqa
     currency: AccountCurrency = Field(..., description="Код валюты (RUB, USD)")
     balance: Decimal = Field(
         ...,
@@ -43,7 +44,7 @@ class AccountsCreate(BaseModel):
 
 class Account(AccountsCreate):
     """Модель счета"""
-    id: uuid.UUID = Field(..., description="Уникальный идентификатор счета пользователя")
+    id: uuid.UUID = Field(..., description="Уникальный идентификатор счета пользователя")   # noqa
     user_id: uuid.UUID = Field(..., decription="Владелец счета")
- 
+
     model_config = ConfigDict(from_attributes=True)
