@@ -9,8 +9,8 @@ from src.database import Base
 class User(Base):
     __tablename__ = 'users'
 
-    email: Mapped[str] = mapped_column(String(254), unique=True)
+    email: Mapped[str] = mapped_column(String(254), unique=True, index=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(254), nullable=False)
     full_name: Mapped[str] = mapped_column(String(254), nullable=False)
     is_active: Mapped[bool] = mapped_column(BOOLEAN, default=True)
-    created_at: Mapped[datetime] = mapped_column(TIMESTAMP, Mdefault=datetime.now())
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP, default=datetime.now())

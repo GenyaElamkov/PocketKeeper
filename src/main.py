@@ -1,7 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 
-from api import accounts, categories, transactions, users
+from src.api import main_router
 
 app = FastAPI(
     title="API Учет бюджета",
@@ -15,15 +15,12 @@ async def root():
     return {"message": "Добро пожаловать в API учет бюджета!"}
 
 
-app.include_router(users.router)
-app.include_router(accounts.router)
-app.include_router(categories.router)
-app.include_router(transactions.router)
+app.include_router(main_router)
 
 
 if __name__ == "__main__":
     uvicorn.run(
-        "main:app",
+        "src.main:app",
         host="127.0.0.1",
         port=8000,
         reload=True,
