@@ -4,6 +4,7 @@ import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.db_depends import get_async_db
@@ -58,8 +59,20 @@ async def get_current_user(
     except jwt.PyJWTError:
         raise creditals_exception
 
-    result = db.scalars(UserModel).where(UserModel.email == email, UserModel.is_active == True) # noqa
+    result = await db.scalars(
+            select(UserModel).where(UserModel.email == email, UserModel.is_active == True) # noqa
+        )
     user = result.first()
     if user is None:
         raise creditals_exception
     return user
+
+
+async def get_current_member(current_user: UserModel = Depends(get_current_user)):
+    """Получение текущего пользователя  с ролью 'meber'"""
+    if current_user.role != "member":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have enough permissions",
+        )
+    return current_user

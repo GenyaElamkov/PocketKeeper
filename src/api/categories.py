@@ -3,6 +3,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.db_depends import get_async_db
+from src.auth import get_current_member
 from src.models.categories import Category as CategoryModel
 from src.models.users import User as UserModel
 from src.schemas.categories import Category as CategorySchema
@@ -16,15 +17,11 @@ router = APIRouter(
 
 
 @router.post("/", name="Создать новую категорию", response_model=CategorySchema, status_code=status.HTTP_201_CREATED)
-async def create_category(category: CategoryCreateSchema, db: AsyncSession = Depends(get_async_db)) -> CategorySchema:
-    user = await db.scalars(
-        select(UserModel).where(UserModel.id == category.user_id, UserModel.is_active == True), # noqa
-    )
-    if not user.first():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Пользователь не найден",
-        )
+async def create_category(category: CategoryCreateSchema,
+                          db: AsyncSession = Depends(get_async_db),
+                          current_user: UserModel = Depends(get_current_member),
+                          ) -> CategorySchema:
+
     if category.parent_id is not None:
         parent = await db.scalars(
             select(CategoryModel).where(CategoryModel.id == category.parent_id),
@@ -43,17 +40,19 @@ async def create_category(category: CategoryCreateSchema, db: AsyncSession = Dep
             status_code=status.HTTP_409_CONFLICT,
             detail="Категория с таким именем уже существует",
         )
-    db_category = CategoryModel(**category.model_dump())
+    db_category = CategoryModel(**category.model_dump(), user_id=current_user.id)
     db.add(db_category)
     await db.commit()
     await db.refresh(db_category)
     return db_category
 
 
-@router.get("/{user_id}", name="Получить все категории", response_model=list[CategorySchema])
-async def get_all_categories(user_id: int, db: AsyncSession = Depends(get_async_db)) -> list[CategorySchema]:
+@router.get("/", name="Получить все категории", response_model=list[CategorySchema])
+async def get_all_categories(db: AsyncSession = Depends(get_async_db),
+                             current_user: UserModel = Depends(get_current_member),
+                             ) -> list[CategorySchema]:
     user = await db.scalars(
-        select(UserModel).where(UserModel.id == user_id, UserModel.is_active == True),  # noqa
+        select(UserModel).where(UserModel.id == current_user.id, UserModel.is_active == True),  # noqa
     )
     if not user.first():
         raise HTTPException(
@@ -71,11 +70,11 @@ async def get_all_categories(user_id: int, db: AsyncSession = Depends(get_async_
 
 
 @router.put("/{category_id}", name="Обновить категорию", response_model=CategorySchema)
-async def update_category(
-    category_id: int,
-    category: CategoryUpdateSchema,
-    db: AsyncSession = Depends(get_async_db),
-) -> CategorySchema:
+async def update_category(category_id: int,
+                          category: CategoryUpdateSchema,
+                          db: AsyncSession = Depends(get_async_db),
+                          current_user: UserModel = Depends(get_current_member),
+                          ) -> CategorySchema:
     result = await db.scalars(
         select(CategoryModel).where(CategoryModel.id == category_id),
     )
@@ -84,6 +83,11 @@ async def update_category(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Категория не найдена",
+        )
+    if db_category.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Недостаточно прав для обновления категории",
         )
     await db.execute(
         update(CategoryModel).where(CategoryModel.id == category_id).values(**category.model_dump()),
@@ -94,7 +98,10 @@ async def update_category(
 
 
 @router.delete("/{category_id}", name="Удалить категорию", response_model=CategorySchema)
-async def delete_category(category_id: int, db: AsyncSession = Depends(get_async_db)) -> CategorySchema:
+async def delete_category(category_id: int,
+                          db: AsyncSession = Depends(get_async_db),
+                          current_user: UserModel = Depends(get_current_member),
+                          ) -> CategorySchema:
     category = await db.scalars(
         select(CategoryModel).where(CategoryModel.id == category_id, CategoryModel.is_active == True),  # noqa
     )
@@ -104,6 +111,12 @@ async def delete_category(category_id: int, db: AsyncSession = Depends(get_async
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Категория не найдена",
         )
+    if db_category.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Недостаточно прав для удаления категории",
+        )
     db_category.is_active = False
     await db.commit()
+    await db.refresh(db_category)
     return db_category

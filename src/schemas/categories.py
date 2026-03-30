@@ -5,7 +5,6 @@ class CategoryCreate(BaseModel):
     """
     Схема для создания категории
     """
-    user_id: int = Field(..., description="Идентификатор пользователя")
     name: str = Field(
         ...,
         min_length=3,
@@ -37,7 +36,6 @@ class CategoryUpdate(BaseModel):
     """
     Схема для обновления категории
     """
-    user_id: int | None = Field(None, description="Идентификатор пользователя")
     name: str | None = Field(
         None,
         min_length=3,
