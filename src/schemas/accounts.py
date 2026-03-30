@@ -1,4 +1,3 @@
-import uuid
 from decimal import Decimal
 from enum import Enum
 
@@ -23,6 +22,7 @@ class AccountType(str, Enum):
 
 class AccountsCreate(BaseModel):
     """Модель для создания счета пользователем"""
+    user_id: int = Field(..., description="Идентификатор пользователя")
     name: str = Field(
         ...,
         description="Название счета (например, 'Кошелек')",
@@ -36,15 +36,14 @@ class AccountsCreate(BaseModel):
         max_digits=10,
         decimal_places=2,
     )
-    is_archived: bool = Field(
-        default=False,
-        description="Архивирован ли счет (скрыт из выбора)",
-    )
 
 
 class Account(AccountsCreate):
     """Модель счета"""
-    id: uuid.UUID = Field(..., description="Уникальный идентификатор счета пользователя")   # noqa
-    user_id: uuid.UUID = Field(..., decription="Владелец счета")
+    id: int = Field(..., description="Уникальный идентификатор счета пользователя")   # noqa
+    is_archived: bool = Field(
+        default=False,
+        description="Архивирован ли счет (скрыт из выбора)",
+    )
 
     model_config = ConfigDict(from_attributes=True)

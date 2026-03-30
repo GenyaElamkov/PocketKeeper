@@ -1,4 +1,3 @@
-import uuid
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
@@ -13,9 +12,9 @@ class TransactionType(str, Enum):
 
 class TransactionCreate(BaseModel):
     """Модель для создания транзакций"""
-    user_id: uuid.UUID = Field(..., description="Идентификатор пользователя, создавшего транзакцию")
-    account_id: uuid.UUID = Field(..., description="Идентификатор счета, с которого списали/зачислили")
-    category_id: uuid.UUID = Field(..., description="Категория транзакции")
+    user_id: int = Field(..., description="Идентификатор пользователя, создавшего транзакцию")
+    account_id: int = Field(..., description="Идентификатор счета, с которого списали/зачислили")
+    category_id: int = Field(..., description="Категория транзакции")
     amount: Decimal = Field(
         ...,
         description="Сумма транзакции (больше 0)",
@@ -35,6 +34,6 @@ class TransactionCreate(BaseModel):
 
 class Transaction(TransactionCreate):
     """Модель для представления транзакции"""
-    id: uuid.UUID = Field(description="Уникальный идентификатор операции") # noqa
+    id: int = Field(description="Уникальный идентификатор операции") # noqa
 
     model_config = ConfigDict(from_attributes=True)

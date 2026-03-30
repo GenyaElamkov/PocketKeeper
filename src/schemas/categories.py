@@ -1,12 +1,11 @@
-import uuid
-
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class CategoryCreate(BaseModel):
     """
-    Модель для создания категории
+    Схема для создания категории
     """
+    user_id: int = Field(..., description="Идентификатор пользователя")
     name: str = Field(
         ...,
         min_length=3,
@@ -18,7 +17,7 @@ class CategoryCreate(BaseModel):
         description="Ссылка на иконку категории (опционально)",
         max_length=200,
     )
-    parent_id: uuid.UUID | None = Field(
+    parent_id: int | None = Field(
         None,
         description="Идентификатор родительской категории (опционально)",
     )
@@ -26,8 +25,36 @@ class CategoryCreate(BaseModel):
 
 class Category(CategoryCreate):
     """
-    Модель для представления категории
+    Схема для представления категории
     """
-    id: uuid.UUID = Field(..., description="Уникальный идентификатор категории")    # noqa
+    id: int = Field(..., description="Уникальный идентификатор категории")    # noqa
+    is_active: bool = Field(..., description="Активна ли категория")
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class CategoryUpdate(BaseModel):
+    """
+    Схема для обновления категории
+    """
+    user_id: int | None = Field(None, description="Идентификатор пользователя")
+    name: str | None = Field(
+        None,
+        min_length=3,
+        max_length=50,
+        description="Название категории (от 3 до 50 символов)",
+    )
+    icon: str | None = Field(
+        None,
+        description="Ссылка на иконку категории (опционально)",
+        max_length=200,
+    )
+    parent_id: int | None = Field(
+        None,
+        description="Идентификатор родительской категории (опционально)",
+    )
+
+    is_active: bool | None = Field(
+        None,
+        description="Активна ли категория",
+    )
