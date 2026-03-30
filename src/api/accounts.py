@@ -61,6 +61,26 @@ async def update_account(account_id: int) -> dict:
     return {"message": f"Счет с ID {account_id} обновлена (заглушка)"}
 
 
-@router.delete("/{account_id}", name="Удалить счет")
-async def delete_account(account_id: int) -> dict:
-    return {"message": f"Счет с ID {account_id} удалена (заглушка)"}
+@router.delete("/{account_id}", name="Удалить счет", response_model=AccountSchema)
+async def delete_account(account_id: int,
+                         db: AccountSchema = Depends(get_async_db),
+                         current_user: UserModel = Depends(get_current_member),
+                         ) -> AccountSchema:
+    result = await db.scalars(
+        select(AccountModel).where(AccountModel.id == account_id),
+    )
+    db_account = result.first()
+    if not db_account:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Счет не найден",
+        )
+    if db_account.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Недостаточно прав для удаления счета",
+        )
+    db_account.is_archived = True
+    await db.commit()
+    await db.refresh(db_account)
+    return db_account
