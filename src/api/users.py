@@ -33,6 +33,7 @@ async def create_user(user: UserCreateSchema, db: AsyncSession = Depends(get_asy
         email=user.email,
         hashed_password=heash_pasword(user.password.get_secret_value()),
         full_name=user.full_name,
+        role=user.role,
     )
     db.add(db_user)
     await db.commit()
