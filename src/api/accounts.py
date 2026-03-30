@@ -24,7 +24,7 @@ async def create_account(account: AccountsCreateSchema,
     account_result = await db.scalars(
         select(AccountModel).where(
             AccountModel.name == account.name,
-            AccountModel.user_id == account.user_id,
+            AccountModel.user_id == current_user.id,
         ),
     )
     if account_result.first():
@@ -39,18 +39,13 @@ async def create_account(account: AccountsCreateSchema,
     return db_account
 
 
-@router.get("/{user_id}", name="Список счетов", response_model=list[AccountSchema])
-async def get_all_accounts(user_id: int, db: AsyncSession = Depends(get_async_db)) -> list[AccountSchema]:
-    user = await db.scalars(
-        select(UserModel).where(UserModel.id == user_id),
-    )
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Пользователь не найден",
-        )
+@router.get("/", name="Список счетов", response_model=list[AccountSchema])
+async def get_all_accounts(db: AsyncSession = Depends(get_async_db),
+                           current_user: UserModel = Depends(get_current_member),
+                           ) -> list[AccountSchema]:
+
     accounts = await db.scalars(
-        select(AccountModel).where(AccountModel.user_id == user_id, AccountModel.is_archived == False), # noqa
+        select(AccountModel).where(AccountModel.user_id == current_user.id),
     )
     db_accounts = accounts.all()
     if not db_accounts:
