@@ -3,6 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.db_depends import get_async_db
+from src.auth import get_current_member
 from src.models.accounts import Account as AccountModel
 from src.models.users import User as UserModel
 from src.schemas.accounts import Account as AccountSchema
@@ -14,16 +15,11 @@ router = APIRouter(
 )
 
 
-@router.post("/{user_id}", name="Создать счет", response_model=AccountSchema, status_code=status.HTTP_201_CREATED)
-async def create_account(account: AccountsCreateSchema, db: AsyncSession = Depends(get_async_db)) -> AccountSchema:
-    user = await db.scalars(
-        select(UserModel).where(UserModel.id == account.user_id, UserModel.is_active == True),  # noqa
-    )
-    if not user.first():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Пользователь не найден",
-        )
+@router.post("/", name="Создать счет", response_model=AccountSchema, status_code=status.HTTP_201_CREATED)
+async def create_account(account: AccountsCreateSchema,
+                         db: AsyncSession = Depends(get_async_db),
+                         current_user: UserModel = Depends(get_current_member),
+                         ) -> AccountSchema:
 
     account_result = await db.scalars(
         select(AccountModel).where(
@@ -36,7 +32,7 @@ async def create_account(account: AccountsCreateSchema, db: AsyncSession = Depen
             status_code=status.HTTP_409_CONFLICT,
             detail="Счет с таким именем уже существует",
         )
-    db_account = AccountModel(**account.model_dump())
+    db_account = AccountModel(**account.model_dump(), user_id=current_user.id)
     db.add(db_account)
     await db.commit()
     await db.refresh(db_account)

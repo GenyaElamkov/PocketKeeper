@@ -22,7 +22,6 @@ class AccountType(str, Enum):
 
 class AccountsCreate(BaseModel):
     """Модель для создания счета пользователем"""
-    user_id: int = Field(..., description="Идентификатор пользователя")
     name: str = Field(
         ...,
         description="Название счета (например, 'Кошелек')",
