@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from enum import Enum
 
@@ -12,7 +12,6 @@ class TransactionType(str, Enum):
 
 class TransactionCreate(BaseModel):
     """Модель для создания транзакций"""
-    user_id: int = Field(..., description="Идентификатор пользователя, создавшего транзакцию")
     account_id: int = Field(..., description="Идентификатор счета, с которого списали/зачислили")
     category_id: int = Field(..., description="Категория транзакции")
     amount: Decimal = Field(
@@ -22,14 +21,13 @@ class TransactionCreate(BaseModel):
         decimal_places=2,
         gt=0,
     )
-    type: TransactionType = Field(..., description="Тип транзакции (доходы/расходы)")   # noqa
+    type: TransactionType = Field(..., description="Тип транзакции (доходы/расходы)")    # noqa
     description: str | None = Field(
         None,
         description="Комментарий/описание покупки",
         max_length=200,
     )
     transaction_date: date = Field(..., description="Дата операции (может отличаться от created_at)")
-    created_at: datetime = Field(..., description="Когда запись внесена в систему")
 
 
 class Transaction(TransactionCreate):
@@ -37,3 +35,23 @@ class Transaction(TransactionCreate):
     id: int = Field(description="Уникальный идентификатор операции") # noqa
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class TransactionUpdate(BaseModel):
+    """Модель для обновления транзакции"""
+    account_id: int | None = Field(None, description="Идентификатор счета, с которого списали/зачислили")
+    category_id: int | None = Field(None, description="Категория транзакции")
+    amount: Decimal | None = Field(
+        None,
+        description="Сумма транзакции (больше 0)",
+        max_digits=10,
+        decimal_places=2,
+        gt=0,
+    )
+    type: TransactionType | None = Field(None, description="Тип транзакции (доходы/расходы)")    # noqa
+    description: str | None = Field(
+        None,
+        description="Комментарий/описание покупки",
+        max_length=200,
+    )
+    transaction_date: date | None = Field(None, description="Дата операции (может отличаться от created_at)")

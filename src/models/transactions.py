@@ -1,7 +1,8 @@
+from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DATE, DECIMAL, ForeignKey, String
+from sqlalchemy import BOOLEAN, DATE, DECIMAL, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database import Base
@@ -22,7 +23,8 @@ class Transaction(Base, TimeBase):
     amount: Mapped[Decimal] = mapped_column(DECIMAL(10, 2), nullable=False)
     type: Mapped[str] = mapped_column(nullable=False)   # noqa
     description: Mapped[str | None] = mapped_column(String(200), nullable=True)
-    date: Mapped[date] = mapped_column(DATE, nullable=False)
+    transaction_date: Mapped[date] = mapped_column(DATE, nullable=False)
+    is_active: Mapped[bool] = mapped_column(BOOLEAN, default=True)
 
     user: Mapped["User"] = relationship("User", back_populates="transactions")
     category: Mapped["Category"] = relationship("Category", back_populates="transactions")

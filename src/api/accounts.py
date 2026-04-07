@@ -16,7 +16,8 @@ router = APIRouter(
 )
 
 
-@router.post("/", name="Создать счет", response_model=AccountSchema, status_code=status.HTTP_201_CREATED)
+@router.post("/", name="Создать счет",
+             response_model=AccountSchema, status_code=status.HTTP_201_CREATED)
 async def create_account(account: AccountsCreateSchema,
                          db: AsyncSession = Depends(get_async_db),
                          current_user: UserModel = Depends(get_current_member),

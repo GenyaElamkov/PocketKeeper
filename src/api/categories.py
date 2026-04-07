@@ -16,7 +16,8 @@ router = APIRouter(
 )
 
 
-@router.post("/", name="Создать новую категорию", response_model=CategorySchema, status_code=status.HTTP_201_CREATED)
+@router.post("/", name="Создать новую категорию",
+             response_model=CategorySchema, status_code=status.HTTP_201_CREATED)
 async def create_category(category: CategoryCreateSchema,
                           db: AsyncSession = Depends(get_async_db),
                           current_user: UserModel = Depends(get_current_member),
@@ -51,15 +52,9 @@ async def create_category(category: CategoryCreateSchema,
 async def get_all_categories(db: AsyncSession = Depends(get_async_db),
                              current_user: UserModel = Depends(get_current_member),
                              ) -> list[CategorySchema]:
-    user = await db.scalars(
-        select(UserModel).where(UserModel.id == current_user.id, UserModel.is_active == True),  # noqa
+    result = await db.scalars(
+        select(CategoryModel).where(CategoryModel.user_id == current_user.id),
     )
-    if not user.first():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Пользователь не найден",
-        )
-    result = await db.scalars(select(CategoryModel))
     categories = result.all()
     if not categories:
         raise HTTPException(
@@ -90,7 +85,9 @@ async def update_category(category_id: int,
             detail="Недостаточно прав для обновления категории",
         )
     await db.execute(
-        update(CategoryModel).where(CategoryModel.id == category_id).values(**category.model_dump()),
+        update(CategoryModel)
+        .where(CategoryModel.id == category_id)
+        .values(**category.model_dump()),
     )
     await db.commit()
     await db.refresh(db_category)
