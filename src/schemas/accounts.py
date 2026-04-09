@@ -40,7 +40,7 @@ class AccountsCreate(BaseModel):
 class Account(AccountsCreate):
     """Модель счета"""
     id: int = Field(..., description="Уникальный идентификатор счета пользователя")   # noqa
-    is_archived: bool = Field(
+    is_active: bool = Field(
         default=False,
         description="Архивирован ли счет (скрыт из выбора)",
     )
@@ -61,4 +61,4 @@ class AccountUpdate(BaseModel):
                                     max_digits=10,
                                     decimal_places=2,
                                     )
-    is_archived: bool | None = Field(None, description="Архивирован ли счет (скрыт из выбора)")
+    is_active: bool | None = Field(None, description="Архивирован ли счет (скрыт из выбора)")

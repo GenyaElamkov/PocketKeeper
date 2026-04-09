@@ -69,7 +69,7 @@
 | `type` | Enum | Тип (cash, card, deposit) |
 | `currency` | String (3) | Код валюты (RUB, USD) |
 | `balance` | Decimal | Текущий баланс |
-| `is_archived` | Boolean | Архивирован ли счет (скрыт из выбора) |
+| `is_active` | Boolean | Архивирован ли счет (скрыт из выбора) |
 
 ### 3.4. Таблица `categories` (Категории)
 | Поле | Тип данных | Описание |

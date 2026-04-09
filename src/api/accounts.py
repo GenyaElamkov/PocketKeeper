@@ -105,7 +105,7 @@ async def delete_account(account_id: int,
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Недостаточно прав для удаления счета",
         )
-    db_account.is_archived = True
+    db_account.is_active = True
     await db.commit()
     await db.refresh(db_account)
     return db_account

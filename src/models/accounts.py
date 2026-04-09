@@ -15,6 +15,6 @@ class Account(Base, TimeBase):
     type: Mapped[str] = mapped_column(String(20), nullable=False)   # noqa
     currency: Mapped[str] = mapped_column(String(3), nullable=False)
     balance: Mapped[Decimal] = mapped_column(DECIMAL(10, 2), nullable=False)
-    is_archived: Mapped[bool] = mapped_column(BOOLEAN, default=False)
+    is_active: Mapped[bool] = mapped_column(BOOLEAN, default=False)
 
     transactions = relationship("Transaction", back_populates="account")

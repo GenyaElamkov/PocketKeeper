@@ -31,7 +31,7 @@ async def create_transaction(transaction: TransactionCreateSchema,
     account = await db.scalars(
         select(AccountModel).where(
             AccountModel.id == transaction.account_id,
-            AccountModel.is_archived.is_(False),
+            AccountModel.is_active.is_(False),
         ),
     )
     if not account.first():
