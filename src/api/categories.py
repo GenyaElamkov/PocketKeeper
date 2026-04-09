@@ -32,15 +32,6 @@ async def create_category(category: CategoryCreateSchema,
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Родительская категория не найдена",
             )
-
-    result = await db.scalars(
-        select(CategoryModel).where(CategoryModel.name == category.name),
-    )
-    if result.first():
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Категория с таким именем уже существует",
-        )
     db_category = CategoryModel(**category.model_dump(), user_id=current_user.id)
     db.add(db_category)
     await db.commit()
@@ -56,7 +47,7 @@ async def get_all_categories(db: AsyncSession = Depends(get_async_db),
         select(CategoryModel).where(CategoryModel.user_id == current_user.id),
     )
     categories = result.all()
-    if not categories:
+    if categories is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Категории не найдены",
@@ -74,7 +65,7 @@ async def update_category(category_id: int,
         select(CategoryModel).where(CategoryModel.id == category_id),
     )
     db_category = result.first()
-    if not db_category:
+    if db_category is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Категория не найдена",
@@ -103,7 +94,7 @@ async def delete_category(category_id: int,
         select(CategoryModel).where(CategoryModel.id == category_id, CategoryModel.is_active == True),  # noqa
     )
     db_category = category.first()
-    if not db_category:
+    if db_category is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Категория не найдена",

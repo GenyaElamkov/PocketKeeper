@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.db_depends import get_async_db
@@ -11,6 +11,9 @@ from src.models.users import User as UserModel
 from src.schemas.transactions import Transaction as TransactionSchema
 from src.schemas.transactions import \
     TransactionCreate as TransactionCreateSchema
+from src.schemas.transactions import TransactionList as TransactionListSchema
+from src.schemas.transactions import \
+    TransactionRequest as TransactionRequestSchema
 from src.schemas.transactions import \
     TransactionUpdate as TransactionUpdateSchema
 
@@ -34,7 +37,7 @@ async def create_transaction(transaction: TransactionCreateSchema,
             AccountModel.is_active.is_(False),
         ),
     )
-    if not account.first():
+    if account.first() is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Счет не найден",
@@ -46,7 +49,7 @@ async def create_transaction(transaction: TransactionCreateSchema,
             CategoryModel.is_active.is_(True),
         ),
     )
-    if not category.first():
+    if category.first() is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Категория не найдена",
@@ -58,22 +61,38 @@ async def create_transaction(transaction: TransactionCreateSchema,
     return db_transaction
 
 
-@router.get("/", name="Список транзакций", response_model=list[TransactionSchema])
-async def get_all_transactions(db: AsyncSession = Depends(get_async_db),
+@router.get("/", name="Список транзакций", response_model=TransactionListSchema)
+async def get_all_transactions(request: TransactionRequestSchema = Depends(),
+                               db: AsyncSession = Depends(get_async_db),
                                current_user: UserModel = Depends(get_current_member),
-                               ) -> list[TransactionSchema]:
+                               ) -> TransactionListSchema:
     """Список транзакций"""
+    filters = [TransactionModel.user_id == current_user.id, TransactionModel.is_active.is_(True)]
     transactions = await db.scalars(
-        select(TransactionModel).where(TransactionModel.user_id == current_user.id,
-                                       TransactionModel.is_active.is_(True)),
+        select(TransactionModel).where(*filters),
     )
     db_transactions = transactions.all()
-    if not db_transactions:
+    if db_transactions is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Транзакции не найдены",
         )
-    return db_transactions
+    total_stmt = select(func.count()).select_from(TransactionModel).where(*filters)
+    total = await db.scalar(total_stmt) or 0
+    transaction_stmt = (
+        select(TransactionModel)
+        .where(*filters)
+        .order_by(TransactionModel.transaction_date.desc())
+        .offset((request.page - 1) * request.page_size)
+        .limit(request.page_size)
+    )
+    items = (await db.scalars(transaction_stmt)).all()
+    return {
+        "items": items,
+        "total": total,
+        "page": request.page,
+        "page_size": request.page_size,
+    }
 
 
 @router.put("/{transaction_id}", name="Обновить транзакцию", response_model=TransactionSchema)

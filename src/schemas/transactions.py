@@ -55,3 +55,19 @@ class TransactionUpdate(BaseModel):
         max_length=200,
     )
     transaction_date: date | None = Field(None, description="Дата операции (может отличаться от created_at)")
+
+
+class TransactionList(BaseModel):
+    """Модель для списка пагинации для транзакции"""
+    items: list[Transaction] = Field(..., description="Список транзакций")
+    total: int = Field(ge=0, description="Общее количество транзакций")
+    page: int = Field(ge=1, description="Номер страницы")
+    page_size: int = Field(ge=1, description="Количество элементов на странице")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TransactionRequest(BaseModel):
+    """Модель для фильтрации транзакций"""
+    page: int = Field(ge=1, default=1, description="Номер страницы")
+    page_size: int = Field(ge=1, le=100, default=20, description="Количество элементов на странице")

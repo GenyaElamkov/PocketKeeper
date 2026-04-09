@@ -44,7 +44,7 @@ async def create_user(user: UserCreateSchema, db: AsyncSession = Depends(get_asy
 async def get_all_users(db: AsyncSession = Depends(get_async_db)) -> list[UserSchema]:
     result = await db.scalars(select(UserModel))
     users = result.all()
-    if not users:
+    if users is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Пользователи не найдены",
@@ -58,7 +58,7 @@ async def update_user(user_id: int, user: UserUpdateSchema, db: AsyncSession = D
         select(UserModel).where(UserModel.id == user_id),
     )
     db_user = user_result.first()
-    if not db_user:
+    if db_user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Пользователь не найден",
@@ -85,7 +85,7 @@ async def delete_user(user_id: int, db: AsyncSession = Depends(get_async_db)) ->
         select(UserModel).where(UserModel.id == user_id, UserModel.is_active == True),  # noqa
     )
     db_user = user.first()
-    if not db_user:
+    if db_user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Пользователь не найден",

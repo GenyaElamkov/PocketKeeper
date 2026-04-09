@@ -14,7 +14,7 @@ class Category(Base, TimeBase):
     __tablename__ = "categories"
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
-    name: Mapped[str] = mapped_column(String(50), unique=True)
+    name: Mapped[str] = mapped_column(String(50))
     icon: Mapped[str | None] = mapped_column(String(200), nullable=True)
     parent_id: Mapped[int | None] = mapped_column(ForeignKey("categories.id"), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
