@@ -91,7 +91,7 @@ async def delete_category(category_id: int,
                           current_user: UserModel = Depends(get_current_member),
                           ) -> CategorySchema:
     category = await db.scalars(
-        select(CategoryModel).where(CategoryModel.id == category_id, CategoryModel.is_active == True),  # noqa
+        select(CategoryModel).where(CategoryModel.id == category_id, CategoryModel.is_active.is_(True)),
     )
     db_category = category.first()
     if db_category is None:

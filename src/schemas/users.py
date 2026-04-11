@@ -37,3 +37,7 @@ class UserUpdate(BaseModel):
     full_name: str | None = Field(None, max_length=254, description="Полное имя пользователя")
     is_active: bool | None = Field(None, description="Активен ли аккаунт")
     role: UserRole | None = Field(None, description="Роль")
+
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str = Field(..., description="Токен обновления")
