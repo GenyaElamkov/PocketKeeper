@@ -4,10 +4,10 @@ from sqlalchemy import BOOLEAN, DECIMAL, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database import Base
-from src.models.common import TimeBase
+from src.models.common import TimeBase as TimeBaseMixin
 
 
-class Account(Base, TimeBase):
+class Account(Base, TimeBaseMixin):
     __tablename__ = "accounts"
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)

@@ -4,14 +4,14 @@ from sqlalchemy import BOOLEAN, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database import Base
-from src.models.common import TimeBase
+from src.models.common import TimeBase as TimeBaseMixin
 
 if TYPE_CHECKING:
     from src.models.categories import Category
     from src.models.transactions import Transaction
 
 
-class User(Base, TimeBase):
+class User(Base, TimeBaseMixin):
     __tablename__ = 'users'
 
     email: Mapped[str] = mapped_column(String(254), unique=True, index=True, nullable=False)

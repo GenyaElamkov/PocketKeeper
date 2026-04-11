@@ -4,13 +4,13 @@ from sqlalchemy import Boolean, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database import Base
-from src.models.common import TimeBase
+from src.models.common import TimeBase as TimeBaseMixin
 
 if TYPE_CHECKING:
     from src.models.transactions import Transaction
 
 
-class Category(Base, TimeBase):
+class Category(Base, TimeBaseMixin):
     __tablename__ = "categories"
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)

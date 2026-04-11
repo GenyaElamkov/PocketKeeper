@@ -6,7 +6,7 @@ from sqlalchemy import BOOLEAN, DATE, DECIMAL, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database import Base
-from src.models.common import TimeBase
+from src.models.common import TimeBase as TimeBaseMixin
 
 if TYPE_CHECKING:
     from src.models.accounts import Account
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from src.models.users import User
 
 
-class Transaction(Base, TimeBase):
+class Transaction(Base, TimeBaseMixin):
     __tablename__ = "transactions"
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
