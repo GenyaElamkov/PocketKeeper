@@ -6,8 +6,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class TransactionType(str, Enum):
-    income = "расходы"
-    expense = "доходы"
+    """Тип транзакции"""
+    expense = "расходы"
+    income = "доходы"
 
 
 class TransactionCreate(BaseModel):

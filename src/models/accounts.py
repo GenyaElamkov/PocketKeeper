@@ -14,7 +14,8 @@ class Account(Base, TimeBase):
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     type: Mapped[str] = mapped_column(String(20), nullable=False)   # noqa
     currency: Mapped[str] = mapped_column(String(3), nullable=False)
-    balance: Mapped[Decimal] = mapped_column(DECIMAL(10, 2), nullable=False)
-    is_active: Mapped[bool] = mapped_column(BOOLEAN, default=False)
+    initial_balance: Mapped[Decimal] = mapped_column(DECIMAL(10, 2), default=Decimal("0.0"), nullable=False)
+    balance: Mapped[Decimal] = mapped_column(DECIMAL(10, 2), default=Decimal("0.0"), nullable=False)
+    is_active: Mapped[bool] = mapped_column(BOOLEAN, default=True)
 
     transactions = relationship("Transaction", back_populates="account")

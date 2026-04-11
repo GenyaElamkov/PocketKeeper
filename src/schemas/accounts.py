@@ -29,7 +29,7 @@ class AccountsCreate(BaseModel):
     )
     type: AccountType = Field(..., description="Тип счета (cash, card, deposit)") # noqa
     currency: AccountCurrency = Field(..., description="Код валюты (RUB, USD)")
-    balance: Decimal = Field(
+    initial_balance: Decimal = Field(
         ...,
         description="Текущий баланс",
         max_digits=10,
@@ -37,9 +37,18 @@ class AccountsCreate(BaseModel):
     )
 
 
-class Account(AccountsCreate):
+class Account(BaseModel):
     """Модель счета"""
     id: int = Field(..., description="Уникальный идентификатор счета пользователя")   # noqa
+    name: str = Field(
+        ...,
+        description="Название счета (например, 'Кошелек')",
+        max_length=100,
+    )
+    type: AccountType = Field(..., description="Тип счета (cash, card, deposit)") # noqa
+    currency: AccountCurrency = Field(..., description="Код валюты (RUB, USD)")
+    balance: Decimal | None = Field(None, description="Текущий баланс",
+                                    max_digits=10, decimal_places=2)
     is_active: bool = Field(
         default=False,
         description="Архивирован ли счет (скрыт из выбора)",

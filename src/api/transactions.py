@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.db_depends import get_async_db
 from src.auth import get_current_member
+from src.balance import update_account_balance
 from src.models.accounts import Account as AccountModel
 from src.models.categories import Category as CategoryModel
 from src.models.transactions import Transaction as TransactionModel
@@ -34,7 +35,7 @@ async def create_transaction(transaction: TransactionCreateSchema,
     account = await db.scalars(
         select(AccountModel).where(
             AccountModel.id == transaction.account_id,
-            AccountModel.is_active.is_(False),
+            AccountModel.is_active.is_(True),
         ),
     )
     if account.first() is None:
@@ -56,7 +57,7 @@ async def create_transaction(transaction: TransactionCreateSchema,
         )
     db_transaction = TransactionModel(**transaction.model_dump(), user_id=current_user.id)
     db.add(db_transaction)
-    await db.commit()
+    await update_account_balance(db, transaction.account_id)
     await db.refresh(db_transaction)
     return db_transaction
 
@@ -153,5 +154,6 @@ async def delete_transaction(transaction_id: int,
 
     transaction.is_active = False
     await db.commit()
+    await update_account_balance(db, transaction.account_id)
     await db.refresh(transaction)
     return transaction
