@@ -122,7 +122,7 @@ async def update_transaction(transaction_id: int,
         .where(TransactionModel.id == transaction_id)
         .values(**transaction.model_dump()),
     )
-    await db.commit()
+    await update_account_balance(db, transaction.account_id)
     await db.refresh(db_transaction)
     return db_transaction
 
@@ -153,7 +153,6 @@ async def delete_transaction(transaction_id: int,
         )
 
     transaction.is_active = False
-    await db.commit()
     await update_account_balance(db, transaction.account_id)
     await db.refresh(transaction)
     return transaction
