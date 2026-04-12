@@ -1,15 +1,10 @@
-import jwt
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.db_depends import get_async_db
-from src.auth import (create_access_token, create_refresh_token, hash_pasword,
-                      verify_password)
-from src.config import ALGORITHM, SECRET_KEY
+from src.auth import hash_password
 from src.models.users import User as UserModel
-from src.schemas.users import RefreshTokenRequest as RefreshTokenRequestSchema
 from src.schemas.users import User as UserSchema
 from src.schemas.users import UserCreate as UserCreateSchema
 from src.schemas.users import UserUpdate as UserUpdateSchema
@@ -39,7 +34,7 @@ async def create_user(user: UserCreateSchema,
 
     db_user = UserModel(
         email=user.email,
-        hashed_password=hash_pasword(user.password.get_secret_value()),
+        hashed_password=hash_password(user.password.get_secret_value()),
         full_name=user.full_name,
         role=user.role,
     )
@@ -83,7 +78,7 @@ async def update_user(user_id: int, user: UserUpdateSchema,
         .where(UserModel.id == user_id)
         .values(
             email=user.email,
-            hashed_password=hash_pasword(str(user.password)),
+            hashed_password=hash_password(str(user.password)),
             full_name=user.full_name,
             is_active=user.is_active,
         ),
@@ -111,92 +106,3 @@ async def delete_user(user_id: int,
     await db.commit()
     await db.refresh(db_user)
     return db_user
-
-
-@router.post("/token",
-             name="Аутентифицирует пользователя")
-async def login(
-    form_date: OAuth2PasswordRequestForm = Depends(),
-    db: AsyncSession = Depends(get_async_db),
-) -> dict:
-    """Аутентификация пользователя."""
-    result = await db.scalars(
-        select(UserModel).where(UserModel.email == form_date.username, UserModel.is_active.is_(True)),
-    )
-    user = result.first()
-    if not user or not verify_password(form_date.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Неверный логин или пароль",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    access_token = create_access_token(data={"sub": user.email, "role": user.role, "id": user.id})
-    refresh_token = create_refresh_token(data={"sub": user.email, "role": user.role, "id": user.id})
-    return {
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "token_type": "bearer",
-    }
-
-
-async def get_current_user_from_refresh_token(
-        token: str,
-        db: AsyncSession,
-) -> UserModel:
-    """Проверка токена и возврат пользователя."""
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Неверный токен",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str | None = payload.get("sub")
-        token_type: str | None = payload.get("token_type")
-        if email is None or token_type != "refresh":
-            raise credentials_exception
-
-    except jwt.ExpiredSignatureError:
-        raise credentials_exception
-    except jwt.PyJWTError:
-        raise credentials_exception
-
-    result = await db.scalars(
-        select(UserModel).where(UserModel.email == email,
-                                UserModel.is_active.is_(True)),
-    )
-    user = result.first()
-    if user is None:
-        raise credentials_exception
-    return user
-
-
-@router.post("/refresh-token",
-             name="Обновление токена")
-async def refresh_token(body: RefreshTokenRequestSchema,
-                        db: AsyncSession = Depends(get_async_db)) -> dict:
-    """Обновляет refresh-токен, принимая старый refresh-токен в теле запроса."""
-    old_refresh_token = body.refresh_token
-    user = get_current_user_from_refresh_token(old_refresh_token, db)
-    new_refresh_token = create_refresh_token(
-        data={"sub": user.email, "role": user.role, "id": user.id},
-    )
-    return {
-        "refresh_token": new_refresh_token,
-        "token_type": "bearer",
-    }
-
-
-@router.post("/refresh-access-token", name="Обновление access токена")
-async def refresh_access_token(body: RefreshTokenRequestSchema,
-                               db: AsyncSession = Depends(get_async_db)) -> dict:
-    """Обновляет access-токен, принимая старый refresh-токен в теле запроса."""
-    old_refresh_token = body.refresh_token
-    user = get_current_user_from_refresh_token(old_refresh_token, db)
-    new_access_token = create_access_token(
-        data={"sub": user.email, "role": user.role, "id": user.id},
-    )
-    return {
-        "access_token": new_access_token,
-        "token_type": "bearer",
-    }

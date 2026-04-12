@@ -11,13 +11,14 @@ from src.api.db_depends import get_async_db
 from src.config import (ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM,
                         REFRESH_TOKEN_EXPIRE_DAYS, SECRET_KEY)
 from src.models.users import User as UserModel
+from src.schemas.users import RefreshTokenRequest as RefreshTokenRequestSchema
 from src.schemas.users import User as UserSchema
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 
-def hash_pasword(password: str) -> str:
+def hash_password(password: str) -> str:
     """Хеширование пароля."""
     return pwd_context.hash(password)
 
@@ -89,3 +90,35 @@ async def get_current_member(current_user: UserModel = Depends(get_current_user)
             detail="You don't have enough permissions",
         )
     return current_user
+
+
+async def get_current_user_by_refresh_token(
+        body: RefreshTokenRequestSchema,
+        db: AsyncSession = Depends(get_async_db),
+) -> UserModel:
+    """Проверка токена и возврат пользователя."""
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Неверный токен",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        token = body.refresh_token
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str | None = payload.get("sub")
+        token_type: str | None = payload.get("token_type")
+        if email is None or token_type != "refresh":
+            raise credentials_exception
+
+    except jwt.ExpiredSignatureError:
+        raise credentials_exception
+    except jwt.PyJWTError:
+        raise credentials_exception
+
+    result = await db.scalars(
+        select(UserModel).where(UserModel.email == email, UserModel.is_active.is_(True)),
+    )
+    user = result.first()
+    if user is None:
+        raise credentials_exception
+    return user
