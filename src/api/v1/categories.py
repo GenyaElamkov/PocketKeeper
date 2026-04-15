@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.db_depends import get_async_db
+from src.api.v1.db_depends import get_async_db
 from src.auth import get_current_member
 from src.models.categories import Category as CategoryModel
 from src.models.users import User as UserModel

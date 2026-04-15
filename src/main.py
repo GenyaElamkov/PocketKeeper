@@ -1,18 +1,23 @@
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
 
-from src.api import main_router
+from src.api.v1 import main_router
+from src.versioning import create_versions_app
 
-app = FastAPI(
-    title="API Учет бюджета",
-    description="API для PocketKeeper",
-    version="0.1.0",
-)
+app = FastAPI(description="API для PocketKeeper")
+
+app_v1 = create_versions_app("0.1.0", "API Учет бюджета v1")
 
 
 @app.get("/", name="Главная страница", tags=["Главная"])
 async def root():
-    content = {"message": "Добро пожаловать в API учет бюджета!"}
-    return JSONResponse(content=content, media_type="application/json; charset=utf-8")
+    """Главная страница. Список версий API."""
+    return {
+        "versions": {
+            "v1": {"docs": "v1/docs"},
+        },
+    }
 
-app.include_router(main_router)
+
+app_v1.include_router(main_router)
+
+app.mount("/v1", app_v1)
