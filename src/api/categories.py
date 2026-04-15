@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.db_depends import get_async_db
@@ -8,6 +8,8 @@ from src.models.categories import Category as CategoryModel
 from src.models.users import User as UserModel
 from src.schemas.categories import Category as CategorySchema
 from src.schemas.categories import CategoryCreate as CategoryCreateSchema
+from src.schemas.categories import CategoryList as CategoryListSchema
+from src.schemas.categories import CategoryRequest as CategoryRequestSchema
 from src.schemas.categories import CategoryUpdate as CategoryUpdateSchema
 
 router = APIRouter(
@@ -17,11 +19,13 @@ router = APIRouter(
 
 
 @router.post("/", name="Создать новую категорию",
-             response_model=CategorySchema, status_code=status.HTTP_201_CREATED)
-async def create_category(category: CategoryCreateSchema,
-                          db: AsyncSession = Depends(get_async_db),
-                          current_user: UserModel = Depends(get_current_member),
-                          ) -> CategorySchema:
+             response_model=CategorySchema,
+             status_code=status.HTTP_201_CREATED)
+async def create_category(
+    category: CategoryCreateSchema,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: UserModel = Depends(get_current_member),
+) -> CategorySchema:
 
     if category.parent_id is not None:
         parent = await db.scalars(
@@ -39,28 +43,46 @@ async def create_category(category: CategoryCreateSchema,
     return db_category
 
 
-@router.get("/", name="Получить все категории", response_model=list[CategorySchema])
-async def get_all_categories(db: AsyncSession = Depends(get_async_db),
-                             current_user: UserModel = Depends(get_current_member),
-                             ) -> list[CategorySchema]:
-    result = await db.scalars(
-        select(CategoryModel).where(CategoryModel.user_id == current_user.id),
+@router.get("/", name="Получить все категории",
+            response_model=CategoryListSchema)
+async def get_all_categories(
+    request: CategoryRequestSchema = Depends(),
+    db: AsyncSession = Depends(get_async_db),
+    current_user: UserModel = Depends(get_current_member),
+) -> CategoryListSchema:
+    """Получение всех категорий"""
+    filters = [CategoryModel.user_id == current_user.id]
+
+    if request.category_id is not None:
+        filters.append(CategoryModel.id == request.category_id)
+
+    total_stmt = select(func.count()).select_from(CategoryModel).where(*filters)
+    total = await db.scalar(total_stmt) or 0
+    categories_stmt = (
+        select(CategoryModel)
+        .where(*filters)
+        .order_by(CategoryModel.name)
+        .offset((request.page - 1) * request.page_size)
+        .limit(request.page_size)
     )
-    categories = result.all()
-    if categories is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Категории не найдены",
-        )
-    return categories
+
+    items = (await db.scalars(categories_stmt)).all()
+    return {
+        'items': items,
+        'total': total,
+        'page': request.page,
+        'page_size': request.page_size,
+    }
 
 
 @router.put("/{category_id}", name="Обновить категорию", response_model=CategorySchema)
-async def update_category(category_id: int,
-                          category: CategoryUpdateSchema,
-                          db: AsyncSession = Depends(get_async_db),
-                          current_user: UserModel = Depends(get_current_member),
-                          ) -> CategorySchema:
+async def update_category(
+    category_id: int,
+    category: CategoryUpdateSchema,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: UserModel = Depends(get_current_member),
+) -> CategorySchema:
+    """Обновление категории"""
     result = await db.scalars(
         select(CategoryModel).where(CategoryModel.id == category_id),
     )
@@ -86,10 +108,12 @@ async def update_category(category_id: int,
 
 
 @router.delete("/{category_id}", name="Удалить категорию", response_model=CategorySchema)
-async def delete_category(category_id: int,
-                          db: AsyncSession = Depends(get_async_db),
-                          current_user: UserModel = Depends(get_current_member),
-                          ) -> CategorySchema:
+async def delete_category(
+    category_id: int,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: UserModel = Depends(get_current_member),
+) -> CategorySchema:
+    """Удаление категории"""
     category = await db.scalars(
         select(CategoryModel).where(CategoryModel.id == category_id, CategoryModel.is_active.is_(True)),
     )

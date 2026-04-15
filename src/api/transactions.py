@@ -68,7 +68,10 @@ async def get_all_transactions(request: TransactionRequestSchema = Depends(),
                                current_user: UserModel = Depends(get_current_member),
                                ) -> TransactionListSchema:
     """Список транзакций"""
-    filters = [TransactionModel.user_id == current_user.id, TransactionModel.is_active.is_(True)]
+    filters = [
+        TransactionModel.user_id == current_user.id,
+        TransactionModel.is_active.is_(True),
+    ]
     if request.transaction_date is not None:
         filters.append(TransactionModel.transaction_date == request.transaction_date)
 

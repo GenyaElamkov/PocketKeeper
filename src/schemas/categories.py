@@ -56,3 +56,20 @@ class CategoryUpdate(BaseModel):
         None,
         description="Активна ли категория",
     )
+
+
+class CategoryList(BaseModel):
+    """Схема для списка категорий."""
+    items: list[Category] = Field(..., description="Список категорий")
+    total: int = Field(ge=0, description="Общее количество категорий")
+    page: int = Field(ge=1, description="Номер страницы")
+    page_size: int = Field(ge=1, description="Количество элементов на странице")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class CategoryRequest(BaseModel):
+    """Схема для фильтрации категорий."""
+    page: int = Field(ge=1, default=1, description="Номер страницы")
+    page_size: int = Field(ge=1, le=100, default=20, description="Количество элементов на странице")
+    category_id: int | None = Field(None, description="Название категории")
