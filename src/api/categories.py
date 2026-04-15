@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import func, select, update
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.db_depends import get_async_db
@@ -8,8 +8,6 @@ from src.models.categories import Category as CategoryModel
 from src.models.users import User as UserModel
 from src.schemas.categories import Category as CategorySchema
 from src.schemas.categories import CategoryCreate as CategoryCreateSchema
-from src.schemas.categories import CategoryList as CategoryListSchema
-from src.schemas.categories import CategoryRequest as CategoryRequestSchema
 from src.schemas.categories import CategoryUpdate as CategoryUpdateSchema
 
 router = APIRouter(
@@ -43,36 +41,24 @@ async def create_category(
     return db_category
 
 
-@router.get("/", name="Получить все категории",
-            response_model=CategoryListSchema)
+@router.get("/", name="Получить все категории", response_model=list[CategorySchema])
 async def get_all_categories(
-    request: CategoryRequestSchema = Depends(),
     db: AsyncSession = Depends(get_async_db),
     current_user: UserModel = Depends(get_current_member),
-) -> CategoryListSchema:
+) -> list[CategorySchema]:
     """Получение всех категорий"""
-    filters = [CategoryModel.user_id == current_user.id]
-
-    if request.category_id is not None:
-        filters.append(CategoryModel.id == request.category_id)
-
-    total_stmt = select(func.count()).select_from(CategoryModel).where(*filters)
-    total = await db.scalar(total_stmt) or 0
-    categories_stmt = (
-        select(CategoryModel)
-        .where(*filters)
-        .order_by(CategoryModel.name)
-        .offset((request.page - 1) * request.page_size)
-        .limit(request.page_size)
+    result = await db.scalars(
+        select(CategoryModel).where(
+            CategoryModel.user_id == current_user.id,
+        ),
     )
-
-    items = (await db.scalars(categories_stmt)).all()
-    return {
-        'items': items,
-        'total': total,
-        'page': request.page,
-        'page_size': request.page_size,
-    }
+    categories = result.all()
+    if categories is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Категории не найдены",
+        )
+    return categories
 
 
 @router.put("/{category_id}", name="Обновить категорию", response_model=CategorySchema)
