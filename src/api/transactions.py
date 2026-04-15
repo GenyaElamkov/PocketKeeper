@@ -69,15 +69,9 @@ async def get_all_transactions(request: TransactionRequestSchema = Depends(),
                                ) -> TransactionListSchema:
     """Список транзакций"""
     filters = [TransactionModel.user_id == current_user.id, TransactionModel.is_active.is_(True)]
-    transactions = await db.scalars(
-        select(TransactionModel).where(*filters),
-    )
-    db_transactions = transactions.all()
-    if db_transactions is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Транзакции не найдены",
-        )
+    if request.transaction_date is not None:
+        filters.append(TransactionModel.transaction_date == request.transaction_date)
+
     total_stmt = select(func.count()).select_from(TransactionModel).where(*filters)
     total = await db.scalar(total_stmt) or 0
     transaction_stmt = (

@@ -72,3 +72,4 @@ class TransactionRequest(BaseModel):
     """Модель для фильтрации транзакций"""
     page: int = Field(ge=1, default=1, description="Номер страницы")
     page_size: int = Field(ge=1, le=100, default=20, description="Количество элементов на странице")
+    transaction_date: date | None = Field(None, description="Дата создания транзакции")
