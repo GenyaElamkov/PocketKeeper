@@ -27,10 +27,11 @@ router = APIRouter(
 @router.post("/", name="Создать транзакцию",
              response_model=TransactionSchema,
              status_code=status.HTTP_201_CREATED)
-async def create_transaction(transaction: TransactionCreateSchema,
-                             db: AsyncSession = Depends(get_async_db),
-                             current_user: UserModel = Depends(get_current_member),
-                             ) -> TransactionSchema:
+async def create_transaction(
+    transaction: TransactionCreateSchema,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: UserModel = Depends(get_current_member),
+) -> TransactionSchema:
     """Создание транзакции"""
     account = await db.scalars(
         select(AccountModel).where(
@@ -62,18 +63,25 @@ async def create_transaction(transaction: TransactionCreateSchema,
     return db_transaction
 
 
-@router.get("/", name="Список транзакций", response_model=TransactionListSchema)
-async def get_all_transactions(request: TransactionRequestSchema = Depends(),
-                               db: AsyncSession = Depends(get_async_db),
-                               current_user: UserModel = Depends(get_current_member),
-                               ) -> TransactionListSchema:
+@router.get("/", name="Список транзакций",
+            response_model=TransactionListSchema)
+async def get_all_transactions(
+    request: TransactionRequestSchema = Depends(),
+    db: AsyncSession = Depends(get_async_db),
+    current_user: UserModel = Depends(get_current_member),
+) -> TransactionListSchema:
     """Список транзакций"""
     filters = [
         TransactionModel.user_id == current_user.id,
         TransactionModel.is_active.is_(True),
     ]
+    # Фильтры
     if request.transaction_date is not None:
         filters.append(TransactionModel.transaction_date == request.transaction_date)
+    if request.category_id is not None:
+        filters.append(TransactionModel.category_id == request.category_id)
+    if request.account_id is not None:
+        filters.append(TransactionModel.account_id == request.account_id)
 
     total_stmt = select(func.count()).select_from(TransactionModel).where(*filters)
     total = await db.scalar(total_stmt) or 0
@@ -94,11 +102,12 @@ async def get_all_transactions(request: TransactionRequestSchema = Depends(),
 
 
 @router.put("/{transaction_id}", name="Обновить транзакцию", response_model=TransactionSchema)
-async def update_transaction(transaction_id: int,
-                             transaction: TransactionUpdateSchema,
-                             db: AsyncSession = Depends(get_async_db),
-                             current_user: UserModel = Depends(get_current_member),
-                             ) -> TransactionSchema:
+async def update_transaction(
+    transaction_id: int,
+    transaction: TransactionUpdateSchema,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: UserModel = Depends(get_current_member),
+) -> TransactionSchema:
     """Обновление транзакции"""
     result = await db.scalars(
         select(TransactionModel).where(TransactionModel.id == transaction_id),
@@ -127,10 +136,11 @@ async def update_transaction(transaction_id: int,
 @router.delete("/{transaction_id}",
                name="Удалить транзакцию",
                response_model=TransactionSchema)
-async def delete_transaction(transaction_id: int,
-                             db: AsyncSession = Depends(get_async_db),
-                             current_user: UserModel = Depends(get_current_member),
-                             ) -> TransactionSchema:
+async def delete_transaction(
+    transaction_id: int,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: UserModel = Depends(get_current_member),
+) -> TransactionSchema:
     """Удаление транзакции"""
     result = await db.scalars(
         select(TransactionModel).where(TransactionModel.id == transaction_id,

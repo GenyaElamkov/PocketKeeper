@@ -73,3 +73,5 @@ class TransactionRequest(BaseModel):
     page: int = Field(ge=1, default=1, description="Номер страницы")
     page_size: int = Field(ge=1, le=100, default=20, description="Количество элементов на странице")
     transaction_date: date | None = Field(None, description="Дата создания транзакции")
+    category_id: int | None = Field(None, description="Идентификатор категории транзакции")
+    account_id: int | None = Field(None, description="Идентификатор счета транзакции")
