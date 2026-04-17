@@ -40,8 +40,9 @@ async def login(
 
 
 @router.post("/refresh-token", name="Обновление токена")
-async def refresh_token(user: UserModel = Depends(get_current_user_by_refresh_token),
-                        ) -> dict:
+async def refresh_token(
+    user: UserModel = Depends(get_current_user_by_refresh_token),
+) -> dict:
     """Обновляет refresh-токен, принимая старый refresh-токен в теле запроса."""
     new_refresh_token = create_refresh_token(
         data={"sub": user.email, "role": user.role, "id": user.id},
@@ -53,8 +54,9 @@ async def refresh_token(user: UserModel = Depends(get_current_user_by_refresh_to
 
 
 @router.post("/refresh-access-token", name="Обновление access токена")
-async def refresh_access_token(user: UserModel = Depends(get_current_user_by_refresh_token),
-                               ) -> dict:
+async def refresh_access_token(
+    user: UserModel = Depends(get_current_user_by_refresh_token),
+) -> dict:
     """Обновляет access-токен, принимая старый refresh-токен в теле запроса."""
     new_access_token = create_access_token(
         data={"sub": user.email, "role": user.role, "id": user.id},

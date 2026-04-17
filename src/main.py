@@ -10,7 +10,7 @@ async def root():
     """Главная страница. Список версий API."""
     return {
         "versions": {
-            "v1": {"docs": "v1/docs"},
+            "v1": {"docs": "/docs"},
         },
     }
 

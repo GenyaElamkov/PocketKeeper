@@ -18,8 +18,10 @@ router = APIRouter(
 @router.post("/", name="Создать пользователя",
              response_model=UserSchema,
              status_code=status.HTTP_201_CREATED)
-async def create_user(user: UserCreateSchema,
-                      db: AsyncSession = Depends(get_async_db)) -> UserSchema:
+async def create_user(
+    user: UserCreateSchema,
+    db: AsyncSession = Depends(get_async_db),
+) -> UserSchema:
     """Создание пользователя."""
     user_result = await db.scalars(
         select(UserModel).where(
@@ -45,7 +47,9 @@ async def create_user(user: UserCreateSchema,
 
 @router.get("/", name="Список пользователей",
             response_model=list[UserSchema])
-async def get_all_users(db: AsyncSession = Depends(get_async_db)) -> list[UserSchema]:
+async def get_all_users(
+    db: AsyncSession = Depends(get_async_db),
+) -> list[UserSchema]:
     """Получение списка пользователей."""
     result = await db.scalars(select(UserModel))
     users = result.all()
@@ -60,8 +64,10 @@ async def get_all_users(db: AsyncSession = Depends(get_async_db)) -> list[UserSc
 @router.put("/{user_id}",
             name="Обновить пользователя",
             response_model=UserSchema)
-async def update_user(user_id: int, user: UserUpdateSchema,
-                      db: AsyncSession = Depends(get_async_db)) -> UserSchema:
+async def update_user(
+    user_id: int, user: UserUpdateSchema,
+    db: AsyncSession = Depends(get_async_db),
+) -> UserSchema:
     """Обновление пользователя."""
     user_result = await db.scalars(
         select(UserModel).where(UserModel.id == user_id),
@@ -90,11 +96,15 @@ async def update_user(user_id: int, user: UserUpdateSchema,
 
 @router.delete("/{user_id}", name="Удалить пользователя",
                response_model=UserSchema)
-async def delete_user(user_id: int,
-                      db: AsyncSession = Depends(get_async_db)) -> UserSchema:
+async def delete_user(
+    user_id: int,
+    db: AsyncSession = Depends(get_async_db),
+) -> UserSchema:
     """Удаление пользователя."""
     user = await db.scalars(
-        select(UserModel).where(UserModel.id == user_id, UserModel.is_active.is_(True)),
+        select(UserModel).where(
+            UserModel.id == user_id,
+            UserModel.is_active.is_(True)),
     )
     db_user = user.first()
     if db_user is None:

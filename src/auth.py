@@ -8,14 +8,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.v1.db_depends import get_async_db
-from src.config import (ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM,
-                        REFRESH_TOKEN_EXPIRE_DAYS, SECRET_KEY)
+from src.config import settings
 from src.models.users import User as UserModel
 from src.schemas.users import RefreshTokenRequest as RefreshTokenRequestSchema
 from src.schemas.users import User as UserSchema
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=settings.auth.token_url)
 
 
 def hash_password(password: str) -> str:
@@ -31,23 +30,23 @@ def verify_password(plane_password: str, hashed_password: str) -> bool:
 def create_access_token(data: dict) -> str:
     """Создание токена."""
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.auth.access_token_expire_minutes)
     to_encode.update({
         "exp": expire,
         "token_type": "access",
     })
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(to_encode, settings.auth.secret_key, algorithm=settings.auth.algorithm)
 
 
 def create_refresh_token(data: dict) -> str:
     """Создание regresh-токена с длинным сроком действия token_type='refresh'."""
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    expire = datetime.now(timezone.utc) + timedelta(days=settings.auth.refresh_token_expire_days)
     to_encode.update({
         "exp": expire,
         "token_type": "refresh",
     })
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(to_encode, settings.auth.secret_key, algorithm=settings.auth.algorithm)
 
 
 async def get_current_user(
@@ -62,7 +61,7 @@ async def get_current_user(
     )
 
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, settings.auth.secret_key, algorithms=[settings.auth.algorithm])
         email: str | None = payload.get("sub")
         token_type: str | None = payload.get("token_type")
         if email is None or token_type != "access":
@@ -107,7 +106,7 @@ async def get_current_user_by_refresh_token(
     )
     try:
         token = body.refresh_token
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, settings.auth.secret_key, algorithms=[settings.auth.algorithm])
         email: str | None = payload.get("sub")
         token_type: str | None = payload.get("token_type")
         if email is None or token_type != "refresh":
