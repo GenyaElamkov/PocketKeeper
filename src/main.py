@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from src.api.v1 import main_router
+from src.config import settings
 
 app = FastAPI(description="API для PocketKeeper")
 
@@ -15,4 +16,4 @@ async def root():
     }
 
 
-app.include_router(main_router, prefix="/v1")
+app.include_router(main_router, prefix=settings.api.prefix)

@@ -8,15 +8,22 @@ load_dotenv()
 
 
 class AuthConfig(BaseModel):
+    """Конфигурация аутентификации."""
     algorithm: str = os.getenv("ALGORITHM")
     secret_key: str = os.getenv("SECRET_KEY")
     access_token_expire_minutes: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
     refresh_token_expire_days: int = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS"))
-    token_url: str = "v1/auth/token"
+
+
+class ApiPrefix(BaseModel):
+    """Конфигурация префиксов."""
+    prefix: str = "/api/v1"
 
 
 class Settings(BaseSettings):
+    """Настройки приложения."""
     auth: AuthConfig = AuthConfig()
+    api: ApiPrefix = ApiPrefix()
 
 
 settings = Settings()

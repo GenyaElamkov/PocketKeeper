@@ -14,7 +14,6 @@ class UserCreate(BaseModel):
     email: EmailStr = Field(..., description="Email для входа")
     password: SecretStr = Field(..., min_length=8, description="Пароль (минимум 8 символов)")
     full_name: str = Field(..., max_length=254, description="Полное имя пользователя")
-    role: UserRole = Field(default=UserRole.member, description="Роль")
 
 
 class User(BaseModel):
@@ -35,8 +34,6 @@ class UserUpdate(BaseModel):
     email: EmailStr | None = Field(None, description="Email для входа")
     password: SecretStr | None = Field(None, min_length=8, description="Пароль (минимум 8 символов)")
     full_name: str | None = Field(None, max_length=254, description="Полное имя пользователя")
-    is_active: bool | None = Field(None, description="Активен ли аккаунт")
-    role: UserRole | None = Field(None, description="Роль")
 
 
 class RefreshTokenRequest(BaseModel):

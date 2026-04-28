@@ -12,9 +12,10 @@ from src.config import settings
 from src.models.users import User as UserModel
 from src.schemas.users import RefreshTokenRequest as RefreshTokenRequestSchema
 from src.schemas.users import User as UserSchema
+from src.schemas.users import UserRole
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=settings.auth.token_url)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.api.prefix}/auth/token")
 
 
 def hash_password(password: str) -> str:
@@ -84,9 +85,19 @@ async def get_current_user(
     return user
 
 
-async def get_current_member(current_user: UserModel = Depends(get_current_user)):
-    """Получение текущего пользователя  с ролью 'meber'."""
-    if current_user.role != "member":
+async def get_current_member(current_user: UserModel = Depends(get_current_user)) -> UserModel:
+    """Получение текущего пользователя с ролью 'member'."""
+    if current_user.role != UserRole.member:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have enough permissions",
+        )
+    return current_user
+
+
+async def get_current_admin(current_user: UserModel = Depends(get_current_user)) -> UserModel:
+    """Получение текущего пользователя с ролью 'admin'."""
+    if current_user.role != UserRole.admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have enough permissions",
