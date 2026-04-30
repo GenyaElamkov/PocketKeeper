@@ -37,4 +37,19 @@ class UserUpdate(BaseModel):
 
 
 class RefreshTokenRequest(BaseModel):
+    """Модель для обновления токена"""
     refresh_token: str = Field(..., description="Токен обновления")
+
+
+class UserList(BaseModel):
+    """Модель для списка пользователей"""
+    items: list[User] = Field(..., description="Список пользователей")
+    total: int = Field(ge=0, description="Общее количество пользователей")
+    page: int = Field(ge=1, description="Номер страницы")
+    page_size: int = Field(ge=1, description="Количество элементов на странице")
+
+
+class UserRequest(BaseModel):
+    """Модель для фильтрации пользователей"""
+    page: int = Field(ge=1, default=1, description="Номер страницы")
+    page_size: int = Field(ge=1, le=100, default=20, description="Количество элементов на странице")
