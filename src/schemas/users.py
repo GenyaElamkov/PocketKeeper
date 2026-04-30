@@ -5,8 +5,8 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, SecretStr
 
 
 class UserRole(str, Enum):
-    admin = "admin"
-    member = "member"
+    ADMIN = "admin"
+    MEMBER = "member"
 
 
 class UserCreate(BaseModel):
@@ -34,11 +34,6 @@ class UserUpdate(BaseModel):
     email: EmailStr | None = Field(None, description="Email для входа")
     password: SecretStr | None = Field(None, min_length=8, description="Пароль (минимум 8 символов)")
     full_name: str | None = Field(None, max_length=254, description="Полное имя пользователя")
-
-
-class RefreshTokenRequest(BaseModel):
-    """Модель для обновления токена"""
-    refresh_token: str = Field(..., description="Токен обновления")
 
 
 class UserList(BaseModel):

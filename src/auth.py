@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.api.v1.db_depends import get_async_db
 from src.config import settings
 from src.models.users import User as UserModel
-from src.schemas.users import RefreshTokenRequest as RefreshTokenRequestSchema
+from src.schemas.auth import RefreshTokenRequest as RefreshTokenRequestSchema
 from src.schemas.users import User as UserSchema
 from src.schemas.users import UserRole
 
@@ -87,7 +87,7 @@ async def get_current_user(
 
 async def get_current_member(current_user: UserModel = Depends(get_current_user)) -> UserModel:
     """Получение текущего пользователя с ролью 'member'."""
-    if current_user.role != UserRole.member:
+    if current_user.role != UserRole.MEMBER:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have enough permissions",
@@ -97,7 +97,7 @@ async def get_current_member(current_user: UserModel = Depends(get_current_user)
 
 async def get_current_admin(current_user: UserModel = Depends(get_current_user)) -> UserModel:
     """Получение текущего пользователя с ролью 'admin'."""
-    if current_user.role != UserRole.admin:
+    if current_user.role != UserRole.ADMIN:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have enough permissions",
