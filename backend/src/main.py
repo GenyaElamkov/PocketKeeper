@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
-from src.api.v1 import main_router
-from src.config import settings
+from backend.src.api.v1 import main_router
+from backend.src.config import settings
 
 app = FastAPI(description="API для PocketKeeper")
 

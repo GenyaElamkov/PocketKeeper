@@ -3,8 +3,8 @@ from decimal import Decimal
 from sqlalchemy import BOOLEAN, DECIMAL, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.database import Base
-from src.models.common import TimeBase as TimeBaseMixin
+from backend.src.database import Base
+from backend.src.models.common import TimeBase as TimeBaseMixin
 
 
 class Account(Base, TimeBaseMixin):

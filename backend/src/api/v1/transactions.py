@@ -2,20 +2,21 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.v1.db_depends import get_async_db
-from src.auth import get_current_member
-from src.balance import update_account_balance
-from src.models.accounts import Account as AccountModel
-from src.models.categories import Category as CategoryModel
-from src.models.transactions import Transaction as TransactionModel
-from src.models.users import User as UserModel
-from src.schemas.transactions import Transaction as TransactionSchema
-from src.schemas.transactions import \
+from backend.src.api.v1.db_depends import get_async_db
+from backend.src.auth import get_current_member
+from backend.src.balance import update_account_balance
+from backend.src.models.accounts import Account as AccountModel
+from backend.src.models.categories import Category as CategoryModel
+from backend.src.models.transactions import Transaction as TransactionModel
+from backend.src.models.users import User as UserModel
+from backend.src.schemas.transactions import Transaction as TransactionSchema
+from backend.src.schemas.transactions import \
     TransactionCreate as TransactionCreateSchema
-from src.schemas.transactions import TransactionList as TransactionListSchema
-from src.schemas.transactions import \
+from backend.src.schemas.transactions import \
+    TransactionList as TransactionListSchema
+from backend.src.schemas.transactions import \
     TransactionRequest as TransactionRequestSchema
-from src.schemas.transactions import \
+from backend.src.schemas.transactions import \
     TransactionUpdate as TransactionUpdateSchema
 
 router = APIRouter(

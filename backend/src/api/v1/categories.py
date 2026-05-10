@@ -2,13 +2,15 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.v1.db_depends import get_async_db
-from src.auth import get_current_member
-from src.models.categories import Category as CategoryModel
-from src.models.users import User as UserModel
-from src.schemas.categories import Category as CategorySchema
-from src.schemas.categories import CategoryCreate as CategoryCreateSchema
-from src.schemas.categories import CategoryUpdate as CategoryUpdateSchema
+from backend.src.api.v1.db_depends import get_async_db
+from backend.src.auth import get_current_member
+from backend.src.models.categories import Category as CategoryModel
+from backend.src.models.users import User as UserModel
+from backend.src.schemas.categories import Category as CategorySchema
+from backend.src.schemas.categories import \
+    CategoryCreate as CategoryCreateSchema
+from backend.src.schemas.categories import \
+    CategoryUpdate as CategoryUpdateSchema
 
 router = APIRouter(
     prefix="/categories",

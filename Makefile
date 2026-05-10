@@ -10,7 +10,7 @@ ENV = --env-file .env
 
 # подключение app
 start:
-	uv run uvicorn src.main:app --reload --host $(HOST) --port $(PORT)
+	uv run uvicorn backend.src.main:app --reload --host $(HOST) --port $(PORT)
 
 db-start:
 	@echo "Создание контейнера $(DB_CONTAINER)..."

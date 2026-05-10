@@ -7,12 +7,13 @@ from passlib.context import CryptContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.v1.db_depends import get_async_db
-from src.config import settings
-from src.models.users import User as UserModel
-from src.schemas.auth import RefreshTokenRequest as RefreshTokenRequestSchema
-from src.schemas.users import User as UserSchema
-from src.schemas.users import UserRole
+from backend.src.api.v1.db_depends import get_async_db
+from backend.src.config import settings
+from backend.src.models.users import User as UserModel
+from backend.src.schemas.auth import \
+    RefreshTokenRequest as RefreshTokenRequestSchema
+from backend.src.schemas.users import User as UserSchema
+from backend.src.schemas.users import UserRole
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.api.prefix}/auth/token")
