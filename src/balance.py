@@ -1,9 +1,9 @@
 from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.src.models.accounts import Account as AccountModel
-from backend.src.models.transactions import Transaction as TransactionModel
-from backend.src.schemas.transactions import TransactionType
+from src.models.accounts import Account as AccountModel
+from src.models.transactions import Transaction as TransactionModel
+from src.schemas.transactions import TransactionType
 
 
 async def update_account_balance(db: AsyncSession, account_id: int):

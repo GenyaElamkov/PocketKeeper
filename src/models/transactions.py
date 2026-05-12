@@ -5,13 +5,13 @@ from typing import TYPE_CHECKING
 from sqlalchemy import BOOLEAN, DATE, DECIMAL, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from backend.src.database import Base
-from backend.src.models.common import TimeBase as TimeBaseMixin
+from src.database import Base
+from src.models.common import TimeBase as TimeBaseMixin
 
 if TYPE_CHECKING:
-    from backend.src.models.accounts import Account
-    from backend.src.models.categories import Category
-    from backend.src.models.users import User
+    from models.accounts import Account
+    from models.categories import Category
+    from models.users import User
 
 
 class Transaction(Base, TimeBaseMixin):

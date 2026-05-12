@@ -12,3 +12,4 @@ wheels/
 
 # Data 
 data.sql
+.DS_Store
