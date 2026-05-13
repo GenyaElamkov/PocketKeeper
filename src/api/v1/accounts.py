@@ -2,13 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.v1.db_depends import get_async_db
-from src.auth import get_current_member
+from src.core.dependencies import get_async_db
 from src.models.accounts import Account as AccountModel
 from src.models.users import User as UserModel
 from src.schemas.accounts import Account as AccountSchema
 from src.schemas.accounts import AccountsCreate as AccountsCreateSchema
 from src.schemas.accounts import AccountUpdate as AccountUpdateSchema
+from src.services.auth import get_current_member
 
 router = APIRouter(
     prefix="/accounts",

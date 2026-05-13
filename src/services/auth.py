@@ -7,8 +7,8 @@ from passlib.context import CryptContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.v1.db_depends import get_async_db
-from src.config import settings
+from src.core.config import settings
+from src.core.dependencies import get_async_db
 from src.models.users import User as UserModel
 from src.schemas.auth import RefreshTokenRequest as RefreshTokenRequestSchema
 from src.schemas.users import User as UserSchema

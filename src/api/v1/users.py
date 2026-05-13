@@ -2,8 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.v1.db_depends import get_async_db
-from src.auth import get_current_admin, get_current_user, hash_password
+from src.core.dependencies import get_async_db
 from src.models.users import User as UserModel
 from src.schemas.users import User as UserSchema
 from src.schemas.users import UserCreate as UserCreateSchema
@@ -11,6 +10,8 @@ from src.schemas.users import UserList as UserListSchema
 from src.schemas.users import UserRequest as UserRequestSchema
 from src.schemas.users import UserRole
 from src.schemas.users import UserUpdate as UserUpdateSchema
+from src.services.auth import (get_current_admin, get_current_user,
+                               hash_password)
 
 router = APIRouter(
     prefix="/users",

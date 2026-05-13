@@ -2,9 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.v1.db_depends import get_async_db
-from src.auth import get_current_member
-from src.balance import update_account_balance
+from src.core.dependencies import get_async_db
 from src.models.accounts import Account as AccountModel
 from src.models.categories import Category as CategoryModel
 from src.models.transactions import Transaction as TransactionModel
@@ -17,6 +15,8 @@ from src.schemas.transactions import \
     TransactionRequest as TransactionRequestSchema
 from src.schemas.transactions import \
     TransactionUpdate as TransactionUpdateSchema
+from src.services.auth import get_current_member
+from src.services.balance import update_account_balance
 
 router = APIRouter(
     prefix="/transactions",

@@ -1,19 +1,37 @@
+from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.v1.db_depends import get_async_db
-from src.auth import get_current_member
+from src.core.dependencies import get_async_db, get_category_service
 from src.models.categories import Category as CategoryModel
 from src.models.users import User as UserModel
 from src.schemas.categories import Category as CategorySchema
 from src.schemas.categories import CategoryCreate as CategoryCreateSchema
 from src.schemas.categories import CategoryUpdate as CategoryUpdateSchema
+from src.services.auth import get_current_member
+from src.services.categories import CategoryService
 
 router = APIRouter(
     prefix="/categories",
     tags=["Категории"],
 )
+
+
+@router.get("/", name="Получить все категории", response_model=List[CategorySchema])
+async def read_categories(
+    current_user: UserModel = Depends(get_current_member),
+    category_service: CategoryService = Depends(get_category_service),
+):
+    """Получение всех категорий текущего пользователя."""
+    categories = await category_service.get_categories_by_user(current_user.id)
+    if not categories:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Категории не найдены",
+        )
+    return categories
 
 
 @router.post("/", name="Создать новую категорию",
@@ -39,26 +57,6 @@ async def create_category(
     await db.commit()
     await db.refresh(db_category)
     return db_category
-
-
-@router.get("/", name="Получить все категории", response_model=list[CategorySchema])
-async def get_all_categories(
-    db: AsyncSession = Depends(get_async_db),
-    current_user: UserModel = Depends(get_current_member),
-) -> list[CategorySchema]:
-    """Получение всех категорий"""
-    result = await db.scalars(
-        select(CategoryModel).where(
-            CategoryModel.user_id == current_user.id,
-        ),
-    )
-    categories = result.all()
-    if categories is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Категории не найдены",
-        )
-    return categories
 
 
 @router.put("/{category_id}", name="Обновить категорию", response_model=CategorySchema)

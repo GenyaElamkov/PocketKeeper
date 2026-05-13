@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import BOOLEAN, DATE, DECIMAL, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.database import Base
+from src.core.database import Base
 from src.models.common import TimeBase as TimeBaseMixin
 
 if TYPE_CHECKING:
