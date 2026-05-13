@@ -39,23 +39,11 @@ async def read_categories(
              status_code=status.HTTP_201_CREATED)
 async def create_category(
     category: CategoryCreateSchema,
-    db: AsyncSession = Depends(get_async_db),
     current_user: UserModel = Depends(get_current_member),
+    category_service: CategoryService = Depends(get_category_service),
 ) -> CategorySchema:
-
-    if category.parent_id is not None:
-        parent = await db.scalars(
-            select(CategoryModel).where(CategoryModel.id == category.parent_id),
-        )
-        if not parent.first():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Родительская категория не найдена",
-            )
-    db_category = CategoryModel(**category.model_dump(), user_id=current_user.id)
-    db.add(db_category)
-    await db.commit()
-    await db.refresh(db_category)
+    """Создание новой категории."""
+    db_category = await category_service.create_category(category, current_user.id)
     return db_category
 
 
