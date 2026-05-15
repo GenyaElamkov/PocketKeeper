@@ -1,11 +1,8 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Depends, status
 
-from src.core.dependencies import get_async_db, get_category_service
-from src.models.categories import Category as CategoryModel
+from src.core.dependencies import get_category_service
 from src.models.users import User as UserModel
 from src.schemas.categories import Category as CategorySchema
 from src.schemas.categories import CategoryCreate as CategoryCreateSchema
@@ -21,17 +18,11 @@ router = APIRouter(
 
 @router.get("/", name="Получить все категории", response_model=List[CategorySchema])
 async def read_categories(
-    current_user: UserModel = Depends(get_current_member),
     category_service: CategoryService = Depends(get_category_service),
+    current_user: UserModel = Depends(get_current_member),
 ):
     """Получение всех категорий текущего пользователя."""
-    categories = await category_service.get_categories_by_user(current_user.id)
-    if not categories:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Категории не найдены",
-        )
-    return categories
+    return await category_service.get_categories_by_user(current_user.id)
 
 
 @router.post("/", name="Создать новую категорию",
@@ -39,68 +30,29 @@ async def read_categories(
              status_code=status.HTTP_201_CREATED)
 async def create_category(
     category: CategoryCreateSchema,
-    current_user: UserModel = Depends(get_current_member),
     category_service: CategoryService = Depends(get_category_service),
+    current_user: UserModel = Depends(get_current_member),
 ) -> CategorySchema:
     """Создание новой категории."""
-    db_category = await category_service.create_category(category, current_user.id)
-    return db_category
+    return await category_service.create_category(category, current_user.id)
 
 
 @router.put("/{category_id}", name="Обновить категорию", response_model=CategorySchema)
 async def update_category(
     category_id: int,
     category: CategoryUpdateSchema,
-    db: AsyncSession = Depends(get_async_db),
+    category_service: CategoryService = Depends(get_category_service),
     current_user: UserModel = Depends(get_current_member),
 ) -> CategorySchema:
     """Обновление категории"""
-    result = await db.scalars(
-        select(CategoryModel).where(CategoryModel.id == category_id),
-    )
-    db_category = result.first()
-    if db_category is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Категория не найдена",
-        )
-    if db_category.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Недостаточно прав для обновления категории",
-        )
-    await db.execute(
-        update(CategoryModel)
-        .where(CategoryModel.id == category_id)
-        .values(**category.model_dump()),
-    )
-    await db.commit()
-    await db.refresh(db_category)
-    return db_category
+    return await category_service.update_category(category_id, category, current_user.id)
 
 
 @router.delete("/{category_id}", name="Удалить категорию", response_model=CategorySchema)
 async def delete_category(
     category_id: int,
-    db: AsyncSession = Depends(get_async_db),
+    category_service: CategoryService = Depends(get_category_service),
     current_user: UserModel = Depends(get_current_member),
 ) -> CategorySchema:
     """Удаление категории"""
-    category = await db.scalars(
-        select(CategoryModel).where(CategoryModel.id == category_id, CategoryModel.is_active.is_(True)),
-    )
-    db_category = category.first()
-    if db_category is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Категория не найдена",
-        )
-    if db_category.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Недостаточно прав для удаления категории",
-        )
-    db_category.is_active = False
-    await db.commit()
-    await db.refresh(db_category)
-    return db_category
+    return await category_service.delete_category(category_id, current_user.id)

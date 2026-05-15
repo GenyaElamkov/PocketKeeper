@@ -51,8 +51,3 @@ class CategoryUpdate(BaseModel):
         None,
         description="Идентификатор родительской категории (опционально)",
     )
-
-    is_active: bool | None = Field(
-        None,
-        description="Активна ли категория",
-    )
