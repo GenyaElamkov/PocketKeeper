@@ -20,7 +20,7 @@ class AccountType(str, Enum):
     deposit = "депозит"
 
 
-class AccountsCreate(BaseModel):
+class AccountCreate(BaseModel):
     """Модель для создания счета пользователем"""
     name: str = Field(
         ...,

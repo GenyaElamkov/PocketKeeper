@@ -2,12 +2,12 @@ from collections.abc import Sequence
 
 from fastapi import HTTPException, status
 
-from src.models.categories import Category
 from src.repositories.categories import CategoryRepository
-from src.schemas.categories import CategoryCreate, CategoryUpdate
+from src.schemas.categories import Category, CategoryCreate, CategoryUpdate
 
 
 class CategoryService:
+    """Сервис для работы с категориями."""
     def __init__(self, category_repo: CategoryRepository):
         self.category_repo = category_repo
 

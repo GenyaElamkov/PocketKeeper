@@ -1,13 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import List
 
-from src.core.dependencies import get_async_db
-from src.models.accounts import Account as AccountModel
+from fastapi import APIRouter, Depends, status
+
+from src.core.dependencies import get_account_service
 from src.models.users import User as UserModel
 from src.schemas.accounts import Account as AccountSchema
-from src.schemas.accounts import AccountsCreate as AccountsCreateSchema
+from src.schemas.accounts import AccountCreate as AccountCreateSchema
 from src.schemas.accounts import AccountUpdate as AccountUpdateSchema
+from src.services.accounts import AccountService
 from src.services.auth import get_current_member
 
 router = APIRouter(
@@ -16,96 +16,42 @@ router = APIRouter(
 )
 
 
+@router.get("/", name="Список счетов", response_model=List[AccountSchema])
+async def get_all_accounts(
+    account_service: AccountService = Depends(get_account_service),
+    current_user: UserModel = Depends(get_current_member),
+) -> list[AccountSchema]:
+    """Получение списка счетов пользователя."""
+    return await account_service.get_accounts_by_user(current_user.id)
+
+
 @router.post("/", name="Создать счет",
-             response_model=AccountSchema, status_code=status.HTTP_201_CREATED)
-async def create_account(account: AccountsCreateSchema,
-                         db: AsyncSession = Depends(get_async_db),
-                         current_user: UserModel = Depends(get_current_member),
-                         ) -> AccountSchema:
-
-    account_result = await db.scalars(
-        select(AccountModel).where(
-            AccountModel.name == account.name,
-            AccountModel.user_id == current_user.id,
-        ),
-    )
-    if account_result.first():
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Счет с таким именем уже существует",
-        )
-    db_account = AccountModel(**account.model_dump(), user_id=current_user.id)
-    db.add(db_account)
-    await db.commit()
-    await db.refresh(db_account)
-    return db_account
-
-
-@router.get("/", name="Список счетов", response_model=list[AccountSchema])
-async def get_all_accounts(db: AsyncSession = Depends(get_async_db),
-                           current_user: UserModel = Depends(get_current_member),
-                           ) -> list[AccountSchema]:
-
-    accounts = await db.scalars(
-        select(AccountModel).where(AccountModel.user_id == current_user.id),
-    )
-    db_accounts = accounts.all()
-    if not db_accounts:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Счета не найдены",
-        )
-    return db_accounts
+             response_model=AccountSchema,
+             status_code=status.HTTP_201_CREATED)
+async def create_account(
+    account: AccountCreateSchema,
+    account_service: AccountService = Depends(get_account_service),
+    current_user: UserModel = Depends(get_current_member),
+) -> AccountSchema:
+    return await account_service.create_account(account.model_dump(), current_user.id)
 
 
 @router.put("/{account_id}", name="Обновить счет", response_model=AccountSchema)
-async def update_account(account_id: int,
-                         account: AccountUpdateSchema,
-                         db: AsyncSession = Depends(get_async_db),
-                         current_user: UserModel = Depends(get_current_member),
-                         ) -> AccountSchema:
-    result = await db.scalars(
-        select(AccountModel).where(AccountModel.id == account_id),
-    )
-    db_account = result.first()
-    if not db_account:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Счет не найден",
-        )
-    if db_account.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Недостаточно прав для обновления счета",
-        )
-    await db.execute(
-        update(AccountModel).where(AccountModel.id == account_id).values(**account.model_dump()),
-    )
-    await db.commit()
-    await db.refresh(db_account)
-    return db_account
+async def update_account(
+    account_id: int,
+    account: AccountUpdateSchema,
+    account_service: AccountService = Depends(get_account_service),
+    current_user: UserModel = Depends(get_current_member),
+) -> AccountSchema:
+    """Обновление счета."""
+    return await account_service.update_account(account_id, account, current_user.id)
 
 
 @router.delete("/{account_id}", name="Удалить счет", response_model=AccountSchema)
-async def delete_account(account_id: int,
-                         db: AccountSchema = Depends(get_async_db),
-                         current_user: UserModel = Depends(get_current_member),
-                         ) -> AccountSchema:
-    result = await db.scalars(
-        select(AccountModel).where(AccountModel.id == account_id),
-    )
-    db_account = result.first()
-    if not db_account:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Счет не найден",
-        )
-    if db_account.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Недостаточно прав для удаления счета",
-        )
-    db_account.is_active = False
-    await db.commit()
-    await db.refresh(db_account)
-    return db_account
+async def delete_account(
+    account_id: int,
+    account_service: AccountService = Depends(get_account_service),
+    current_user: UserModel = Depends(get_current_member),
+) -> AccountSchema:
+    """Удаление счета."""
+    return await account_service.delete_account(account_id, current_user.id)
