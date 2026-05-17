@@ -30,10 +30,7 @@ class CategoryRepository:
 
     async def create(self, data: dict, user_id: int) -> Category:
         """Создать категорию."""
-        db_category = Category(
-            **data,
-            user_id=user_id,
-        )
+        db_category = Category(**data, user_id=user_id)
         self.db.add(db_category)
         await self.db.commit()
         await self.db.refresh(db_category)
@@ -47,16 +44,15 @@ class CategoryRepository:
             .values(**data),
         )
         await self.db.commit()
-        return await self.get_by_id(category_id)
+        return await self.db.get(Category, category_id)
 
-    async def get_by_id_active(self, category_id: int) -> Category | None:
-        """Получить активную категорию по ID."""
-        category = await self.db.scalar(
-            select(Category).filter(
-                Category.id == category_id,
-                Category.is_active.is_(True)),
-        )
-        return category
+    async def active_category_by_id_exists(self, category_id: int) -> bool:
+        """Проверить, существует ли активная категория с указанным ID."""
+        filters = [
+            Category.id == category_id,
+            Category.is_active.is_(True),
+        ]
+        return await self.db.scalar(select(Category).filter(*filters)) is not None
 
     async def delete(self, category_id: int) -> Category:
         """Удалить категорию."""

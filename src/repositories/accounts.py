@@ -25,13 +25,21 @@ class AccountRepository:
         )
         return db_acount.all()
 
-    async def get_user_account_by_name(self, data: dict, user_id: int) -> Account | None:
-        """Получить счет пользователя по имени."""
+    async def user_account_by_name_exists(self, name: str, user_id: int) -> bool:
+        """Проверить, что счет пользователя с таким именем уже существует."""
         filters = [
-            Account.name == data['name'],
+            Account.name == name,
             Account.user_id == user_id,
         ]
-        return await self.db.scalar(select(Account).filter(*filters))
+        return await self.db.scalar(select(Account).filter(*filters)) is not None
+
+    async def active_account_by_id_exists(self, account_id: int) -> bool:
+        """Проверить, что счет активен."""
+        filters = [
+            Account.id == account_id,
+            Account.is_active.is_(True),
+        ]
+        return await self.db.scalar(select(Account).filter(*filters)) is not None
 
     async def create(self, data: dict, user_id: int) -> Account:
         """Создать счет."""

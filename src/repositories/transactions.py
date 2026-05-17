@@ -2,10 +2,12 @@ from collections.abc import Sequence
 from datetime import date
 from typing import Optional
 
-from sqlalchemy import func, select
+from sqlalchemy import case, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.models.accounts import Account
 from src.models.transactions import Transaction
+from src.schemas.transactions import TransactionType
 
 
 class TransactionRepository:
@@ -44,3 +46,46 @@ class TransactionRepository:
         )
         items = (await self.db.scalars(transaction_stmt)).all()
         return items, total
+
+    async def get_transaction_by_id(self, transaction_id: int) -> Transaction:
+        """Получить транзакцию по ID."""
+        return await self.db.scalar(
+            select(Transaction).filter(Transaction.id == transaction_id),
+        )
+
+    async def create(self, transaction: dict, user_id: int) -> Transaction:
+        """Создать транзакцию."""
+        db_transaction = Transaction(**transaction, user_id=user_id)
+        self.db.add(db_transaction)
+        await self.db.flush()
+        await self.db.refresh(db_transaction)
+        return db_transaction
+
+    async def update_account_balance(self, account_id: int) -> None:
+        """Обновить баланс счета."""
+        balance_delta = case(
+            (Transaction.type == TransactionType.income, Transaction.amount),
+            (Transaction.type == TransactionType.expense, -Transaction.amount),
+            else_=0,
+        )
+
+        result = await self.db.execute(
+            select(func.sum(balance_delta)).where(
+                Transaction.account_id == account_id,
+                Transaction.is_active.is_(True),
+            ),
+        )
+        transactions_sum = result.scalar() or 0.0
+        account = await self.db.get(Account, account_id)
+
+        account.balance = account.initial_balance + transactions_sum
+        await self.db.commit()
+
+    async def update(self, transaction_id: int, data: dict) -> None:
+        """Обновить транзакцию."""
+        await self.db.execute(
+            update(Transaction)
+            .where(Transaction.id == transaction_id)
+            .values(**data),
+        )
+        await self.db.flush()

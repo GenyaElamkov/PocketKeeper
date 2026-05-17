@@ -24,7 +24,10 @@ class AccountService:
     async def create_account(self, account: AccountCreate, user_id: int) -> Account:
         """Создать аккаунт."""
         # Проверяем, что счет с таким именем уже существует
-        name_account = await self.account_repo.get_user_account_by_name(account, user_id=user_id)
+        name_account = await self.account_repo.user_account_by_name_exists(
+            name=account["name"],
+            user_id=user_id,
+        )
         if name_account:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,

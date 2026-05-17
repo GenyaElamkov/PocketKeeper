@@ -37,5 +37,13 @@ def get_account_service(repo: AccountRepository = Depends(get_accouht_repository
     return AccountService(account_repo=repo)
 
 
-def get_transaction_service(repo: TransactionRepository = Depends(get_transaction_repository)) -> TransactionService:
-    return TransactionService(transaction_repo=repo)
+def get_transaction_service(
+        transaction_repo: TransactionRepository = Depends(get_transaction_repository),
+        account_repo: AccountRepository = Depends(get_accouht_repository),
+        category_repo: CategoryRepository = Depends(get_category_repository),
+) -> TransactionService:
+    return TransactionService(
+        transaction_repo=transaction_repo,
+        account_repo=account_repo,
+        category_repo=category_repo,
+    )

@@ -37,7 +37,7 @@ class CategoryService:
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="You can't create a category for another user",
                 )
-        return await self.category_repo.create(category.model_dump(), user_id=user_id)
+        return await self.category_repo.create(category.model_dump(exclude_unset=True), user_id=user_id)
 
     async def update_category(self, category_id: int, category: CategoryUpdate, user_id: int) -> Category:
         """Обновить категорию."""
@@ -52,11 +52,11 @@ class CategoryService:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can't update a category for another user",
             )
-        return await self.category_repo.update(category_id, category.model_dump())
+        return await self.category_repo.update(category_id, category.model_dump(exclude_unset=True))
 
     async def delete_category(self, category_id: int, user_id: int) -> Category:
         """Мягко удалить активную категорию."""
-        db_category = await self.category_repo.get_by_id_active(category_id)
+        db_category = await self.category_repo.active_category_by_id_exists(category_id)
         if db_category is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
