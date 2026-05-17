@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import func, select, update
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.dependencies import get_async_db
+from src.core.dependencies import get_async_db, get_transaction_service
 from src.models.accounts import Account as AccountModel
 from src.models.categories import Category as CategoryModel
 from src.models.transactions import Transaction as TransactionModel
@@ -17,11 +17,23 @@ from src.schemas.transactions import \
     TransactionUpdate as TransactionUpdateSchema
 from src.services.auth import get_current_member
 from src.services.balance import update_account_balance
+from src.services.transactions import TransactionService
 
 router = APIRouter(
     prefix="/transactions",
     tags=["Транзакции"],
 )
+
+
+@router.get("/", name="Список транзакций",
+            response_model=TransactionListSchema)
+async def get_all_transactions(
+    request: TransactionRequestSchema = Depends(),
+    transaction_service: TransactionService = Depends(get_transaction_service),
+    current_user: UserModel = Depends(get_current_member),
+) -> TransactionListSchema:
+    """Список транзакций"""
+    return await transaction_service.get_all(request, current_user.id)
 
 
 @router.post("/", name="Создать транзакцию",
@@ -61,44 +73,6 @@ async def create_transaction(
     await update_account_balance(db, transaction.account_id)
     await db.refresh(db_transaction)
     return db_transaction
-
-
-@router.get("/", name="Список транзакций",
-            response_model=TransactionListSchema)
-async def get_all_transactions(
-    request: TransactionRequestSchema = Depends(),
-    db: AsyncSession = Depends(get_async_db),
-    current_user: UserModel = Depends(get_current_member),
-) -> TransactionListSchema:
-    """Список транзакций"""
-    filters = [
-        TransactionModel.user_id == current_user.id,
-        TransactionModel.is_active.is_(True),
-    ]
-    # Фильтры
-    if request.transaction_date is not None:
-        filters.append(TransactionModel.transaction_date == request.transaction_date)
-    if request.category_id is not None:
-        filters.append(TransactionModel.category_id == request.category_id)
-    if request.account_id is not None:
-        filters.append(TransactionModel.account_id == request.account_id)
-
-    total_stmt = select(func.count()).select_from(TransactionModel).where(*filters)
-    total = await db.scalar(total_stmt) or 0
-    transaction_stmt = (
-        select(TransactionModel)
-        .where(*filters)
-        .order_by(TransactionModel.transaction_date.desc())
-        .offset((request.page - 1) * request.page_size)
-        .limit(request.page_size)
-    )
-    items = (await db.scalars(transaction_stmt)).all()
-    return {
-        "items": items,
-        "total": total,
-        "page": request.page,
-        "page_size": request.page_size,
-    }
 
 
 @router.put("/{transaction_id}", name="Обновить транзакцию", response_model=TransactionSchema)

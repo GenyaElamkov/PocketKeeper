@@ -27,20 +27,15 @@ class AccountRepository:
 
     async def get_user_account_by_name(self, data: dict, user_id: int) -> Account | None:
         """Получить счет пользователя по имени."""
-        db_account = await self.db.scalar(
-            select(Account).filter(
-                Account.name == data['name'],
-                Account.user_id == user_id,
-            ),
-        )
-        return db_account
+        filters = [
+            Account.name == data['name'],
+            Account.user_id == user_id,
+        ]
+        return await self.db.scalar(select(Account).filter(*filters))
 
     async def create(self, data: dict, user_id: int) -> Account:
         """Создать счет."""
-        db_account = Account(
-            **data,
-            user_id=user_id,
-        )
+        db_account = Account(**data, user_id=user_id)
         self.db.add(db_account)
         await self.db.commit()
         await self.db.refresh(db_account)
