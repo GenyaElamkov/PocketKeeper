@@ -64,4 +64,4 @@ class AccountService:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can't delete an account for another user",
             )
-        return await self.account_repo.delete(account_id)
+        return await self.account_repo.delete(db_account)

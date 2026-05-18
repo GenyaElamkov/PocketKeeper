@@ -39,13 +39,13 @@ class TransactionService:
 
     async def create_transaction(self, transaction: TransactionCreate, user_id: int) -> Transaction:
         """Создать транзакцию."""
-        account = await self.account_repo.active_account_by_id_exists(transaction.account_id)
+        account = await self.account_repo.get_by_id(transaction.account_id)
         if account is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Account not found",
             )
-        category = await self.category_repo.active_category_by_id_exists(category_id=transaction.category_id)
+        category = await self.category_repo.get_by_id(category_id=transaction.category_id)
         if category is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

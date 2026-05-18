@@ -56,7 +56,7 @@ class CategoryService:
 
     async def delete_category(self, category_id: int, user_id: int) -> Category:
         """Мягко удалить активную категорию."""
-        db_category = await self.category_repo.active_category_by_id_exists(category_id)
+        db_category = await self.category_repo.get_by_id(category_id)
         if db_category is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -67,4 +67,4 @@ class CategoryService:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can't delete a category for another user",
             )
-        return await self.category_repo.delete(category_id)
+        return await self.category_repo.delete(db_category)

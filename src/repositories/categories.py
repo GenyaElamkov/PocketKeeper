@@ -12,11 +12,12 @@ class CategoryRepository:
         self.db = db
 
     async def get_by_id(self, category_id: int) -> Category | None:
-        """Получить категорию по ID."""
-        result = await self.db.scalar(
-            select(Category).filter(Category.id == category_id),
-        )
-        return result
+        """Получить активную категорию по ID."""
+        filters = [
+            Category.id == category_id,
+            Category.is_active.is_(True),
+        ]
+        return await self.db.scalar(select(Category).filter(*filters))
 
     async def get_all_active_by_user_id(self, user_id: int) -> Sequence[Category]:
         """Получить все активные категории пользователя."""
@@ -46,18 +47,9 @@ class CategoryRepository:
         await self.db.commit()
         return await self.db.get(Category, category_id)
 
-    async def active_category_by_id_exists(self, category_id: int) -> bool:
-        """Проверить, существует ли активная категория с указанным ID."""
-        filters = [
-            Category.id == category_id,
-            Category.is_active.is_(True),
-        ]
-        return await self.db.scalar(select(Category).filter(*filters)) is not None
-
-    async def delete(self, category_id: int) -> Category:
+    async def delete(self, delete_category: Category) -> Category:
         """Удалить категорию."""
-        db_category = await self.get_by_id(category_id)
-        db_category.is_active = False
+        delete_category.is_active = False
         await self.db.commit()
-        await self.db.refresh(db_category)
-        return db_category
+        await self.db.refresh(delete_category)
+        return delete_category

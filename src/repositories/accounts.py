@@ -12,11 +12,12 @@ class AccountRepository:
         self.db = db
 
     async def get_by_id(self, account_id: int) -> Account | None:
-        """Получить счет по ID."""
-        db_account = await self.db.scalar(
-            select(Account).filter(Account.id == account_id),
-        )
-        return db_account
+        """Получить активный счет по ID."""
+        filters = [
+            Account.id == account_id,
+            Account.is_active.is_(True),
+        ]
+        return await self.db.scalar(select(Account).filter(*filters))
 
     async def get_all_by_user_id(self, user_id: int) -> Sequence[Account]:
         """Получить счета пользователя."""
@@ -30,14 +31,6 @@ class AccountRepository:
         filters = [
             Account.name == name,
             Account.user_id == user_id,
-        ]
-        return await self.db.scalar(select(Account).filter(*filters)) is not None
-
-    async def active_account_by_id_exists(self, account_id: int) -> bool:
-        """Проверить, что счет активен."""
-        filters = [
-            Account.id == account_id,
-            Account.is_active.is_(True),
         ]
         return await self.db.scalar(select(Account).filter(*filters)) is not None
 
@@ -59,10 +52,9 @@ class AccountRepository:
         await self.db.commit()
         return await self.get_by_id(account_id)
 
-    async def delete(self, account_id: int) -> Account:
+    async def delete(self, delete_account: Account) -> Account:
         """Удалить счет."""
-        db_account = await self.get_by_id(account_id)
-        db_account.is_active = False
+        delete_account.is_active = False
         await self.db.commit()
-        await self.db.refresh(db_account)
-        return db_account
+        await self.db.refresh(delete_account)
+        return delete_account

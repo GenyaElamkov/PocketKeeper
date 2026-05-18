@@ -47,7 +47,11 @@ async def update_account(
     return await account_service.update_account(account_id, account, current_user.id)
 
 
-@router.delete("/{account_id}", name="Удалить счет", response_model=AccountSchema)
+@router.delete(
+        "/{account_id}",
+        name="Удалить счет",
+        response_model=AccountSchema,
+        status_code=status.HTTP_200_OK)
 async def delete_account(
     account_id: int,
     account_service: AccountService = Depends(get_account_service),
