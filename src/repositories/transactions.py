@@ -47,12 +47,6 @@ class TransactionRepository:
         items = (await self.db.scalars(transaction_stmt)).all()
         return items, total
 
-    async def get_transaction_by_id(self, transaction_id: int) -> Transaction:
-        """Получить транзакцию по ID."""
-        return await self.db.scalar(
-            select(Transaction).filter(Transaction.id == transaction_id),
-        )
-
     async def create(self, transaction: dict, user_id: int) -> Transaction:
         """Создать транзакцию."""
         db_transaction = Transaction(**transaction, user_id=user_id)
@@ -88,4 +82,17 @@ class TransactionRepository:
             .where(Transaction.id == transaction_id)
             .values(**data),
         )
+        await self.db.flush()
+
+    async def get_active_transaction_by_id(self, transaction_id: int) -> Transaction | None:
+        """Проверить, существует ли активная транзакция с указанным ID."""
+        filters = [
+            Transaction.id == transaction_id,
+            Transaction.is_active.is_(True),
+        ]
+        return await self.db.scalar(select(Transaction).filter(*filters))
+
+    async def delete(self, delete_transaction: Transaction) -> None:
+        """Мягко удалить транзакцию."""
+        delete_transaction.is_active = False
         await self.db.flush()

@@ -65,7 +65,7 @@ class TransactionService:
             user_id: int,
     ) -> Transaction:
         """Обновить транзакцию."""
-        db_transaction = await self.transaction_repo.get_transaction_by_id(transaction_id)
+        db_transaction = await self.transaction_repo.get_active_transaction_by_id(transaction_id)
         if db_transaction is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -78,4 +78,22 @@ class TransactionService:
             )
         await self.transaction_repo.update(transaction_id, update_data.model_dump(exclude_unset=True))
         await self.transaction_repo.update_account_balance(update_data.account_id)
-        return await self.transaction_repo.get_transaction_by_id(transaction_id)
+        return await self.transaction_repo.get_active_transaction_by_id(transaction_id)
+
+    async def delete_transaction(self, transaction_id: int, user_id: int) -> Transaction:
+        """Удалить транзакцию."""
+        db_transaction = await self.transaction_repo.get_active_transaction_by_id(transaction_id)
+        if db_transaction is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Transaction not found",
+            )
+
+        if db_transaction.user_id != user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can't delete a transaction for another user",
+            )
+        await self.transaction_repo.delete(db_transaction)
+        await self.transaction_repo.update_account_balance(db_transaction.account_id)
+        return db_transaction

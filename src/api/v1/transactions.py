@@ -1,9 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Depends, status
 
-from src.core.dependencies import get_async_db, get_transaction_service
-from src.models.transactions import Transaction as TransactionModel
+from src.core.dependencies import get_transaction_service
 from src.models.users import User as UserModel
 from src.schemas.transactions import Transaction as TransactionSchema
 from src.schemas.transactions import \
@@ -14,7 +11,6 @@ from src.schemas.transactions import \
 from src.schemas.transactions import \
     TransactionUpdate as TransactionUpdateSchema
 from src.services.auth import get_current_member
-from src.services.balance import update_account_balance
 from src.services.transactions import TransactionService
 
 router = APIRouter(
@@ -59,31 +55,12 @@ async def update_transaction(
 
 @router.delete("/{transaction_id}",
                name="Удалить транзакцию",
-               response_model=TransactionSchema)
+               response_model=TransactionSchema,
+               status_code=status.HTTP_200_OK)
 async def delete_transaction(
     transaction_id: int,
-    db: AsyncSession = Depends(get_async_db),
+    transaction_service: TransactionService = Depends(get_transaction_service),
     current_user: UserModel = Depends(get_current_member),
 ) -> TransactionSchema:
     """Удаление транзакции"""
-    result = await db.scalars(
-        select(TransactionModel).where(TransactionModel.id == transaction_id,
-                                       TransactionModel.is_active.is_(True)),
-    )
-    transaction = result.first()
-    if transaction is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Транзакция не найдена",
-        )
-
-    if transaction.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Недостаточно прав для удаления транзакции",
-        )
-
-    transaction.is_active = False
-    await update_account_balance(db, transaction.account_id)
-    await db.refresh(transaction)
-    return transaction
+    return await transaction_service.delete_transaction(transaction_id, current_user.id)
