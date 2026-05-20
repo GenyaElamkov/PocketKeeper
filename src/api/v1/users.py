@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import func, select, update
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.dependencies import get_async_db
+from src.core.dependencies import get_async_db, get_user_service
 from src.models.users import User as UserModel
 from src.schemas.users import User as UserSchema
 from src.schemas.users import UserCreate as UserCreateSchema
@@ -12,11 +12,35 @@ from src.schemas.users import UserRole
 from src.schemas.users import UserUpdate as UserUpdateSchema
 from src.services.auth import (get_current_admin, get_current_user,
                                hash_password)
+from src.services.users import UserService
 
 router = APIRouter(
     prefix="/users",
     tags=["Пользователи"],
 )
+
+
+@router.get("/", name="Список пользователей",
+            response_model=UserListSchema)
+async def get_all_users(
+    request: UserRequestSchema = Depends(),
+    user_service: UserService = Depends(get_user_service),
+    current_user: UserModel = Depends(get_current_admin),
+) -> UserListSchema:
+    """Получение списка пользователей, может только 'user' с ролью 'admin'."""
+    return await user_service.get_all_users(request)
+
+
+@router.get("/{user_id}",
+            name="Пользователь",
+            response_model=UserSchema)
+async def get_user(
+    user_id: int,
+    user_service: UserService = Depends(get_user_service),
+    current_user: UserModel = Depends(get_current_user),
+) -> UserSchema:
+    """Получение пользователя по ID."""
+    return await user_service.get_user_by_id(current_user_id=current_user.id, user_id=user_id)
 
 
 @router.post("/", name="Создать пользователя",
@@ -46,60 +70,6 @@ async def create_user(
     db.add(db_user)
     await db.commit()
     return db_user
-
-
-@router.get("/", name="Список пользователей",
-            response_model=UserListSchema)
-async def get_all_users(
-    request: UserRequestSchema = Depends(),
-    db: AsyncSession = Depends(get_async_db),
-    current_user: UserModel = Depends(get_current_admin),
-) -> UserListSchema:
-    """Получение списка пользователей, может только 'user' с ролью 'admin'."""
-    total_stmt = select(func.count()).select_from(UserModel)
-    total = await db.scalar(total_stmt) or 0
-    users_stmt = (
-        select(UserModel)
-        .order_by(
-            UserModel.is_active.is_(True).desc(),
-            UserModel.email,
-        )
-        .offset((request.page - 1) * request.page_size)
-        .limit(request.page_size)
-    )
-    items = (await db.scalars(users_stmt)).all()
-    return {
-        "items": items,
-        "total": total,
-        'page': request.page,
-        'page_size': request.page_size,
-    }
-
-
-@router.get("/{user_id}",
-            name="Пользователь",
-            response_model=UserSchema)
-async def get_user(
-    user_id: int,
-    db: AsyncSession = Depends(get_async_db),
-    current_user: UserModel = Depends(get_current_user),
-) -> UserSchema:
-    """Получение пользователя по ID."""
-    if current_user.id != user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Нет доступа к просмотру этого пользователя",
-        )
-    stmt = await db.scalars(
-        select(UserModel).where(UserModel.id == user_id),
-    )
-    user = stmt.first()
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Пользователь не найден",
-        )
-    return user
 
 
 @router.put("/{user_id}",

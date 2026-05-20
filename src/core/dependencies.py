@@ -7,14 +7,20 @@ from src.core.database import async_session_maker
 from src.repositories.accounts import AccountRepository
 from src.repositories.categories import CategoryRepository
 from src.repositories.transactions import TransactionRepository
+from src.repositories.users import UserRepository
 from src.services.accounts import AccountService
 from src.services.categories import CategoryService
 from src.services.transactions import TransactionService
+from src.services.users import UserService
 
 
 async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
     async with async_session_maker() as session:
         yield session
+
+
+def get_user_repository(db: AsyncSession = Depends(get_async_db)) -> UserRepository:
+    return UserRepository(db=db)
 
 
 def get_category_repository(db: AsyncSession = Depends(get_async_db)) -> CategoryRepository:
@@ -27,6 +33,10 @@ def get_accouht_repository(db: AsyncSession = Depends(get_async_db)) -> AccountR
 
 def get_transaction_repository(db: AsyncSession = Depends(get_async_db)) -> TransactionRepository:
     return TransactionRepository(db=db)
+
+
+def get_user_service(repo: UserRepository = Depends(get_user_repository)) -> UserRepository:
+    return UserService(user_repo=repo)
 
 
 def get_category_service(repo: CategoryRepository = Depends(get_category_repository)) -> CategoryService:
