@@ -3,7 +3,6 @@ from datetime import datetime, timedelta, timezone
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from passlib.context import CryptContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,18 +13,7 @@ from src.schemas.auth import RefreshTokenRequest as RefreshTokenRequestSchema
 from src.schemas.users import User as UserSchema
 from src.schemas.users import UserRole
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.api.prefix}/auth/token")
-
-
-def hash_password(password: str) -> str:
-    """Хеширование пароля."""
-    return pwd_context.hash(password)
-
-
-def verify_password(plane_password: str, hashed_password: str) -> bool:
-    """Проверка пароля."""
-    return pwd_context.verify(plane_password, hashed_password)
 
 
 def create_access_token(data: dict) -> str:

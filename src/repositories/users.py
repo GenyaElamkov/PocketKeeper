@@ -1,4 +1,4 @@
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.users import User
@@ -11,15 +11,17 @@ class UserRepository:
 
     async def get_by_id(self, user_id: int) -> User | None:
         """Получить пользователя по ID."""
-        return await self.db.scalar(
-            select(User).filter(User.id == user_id),
-        )
+        return await self.db.scalar(select(User).filter(User.id == user_id))
 
-    async def get_all(
-            self,
-            page: int,
-            page_size: int,
-    ) -> tuple[User, int]:
+    async def get_active_by_id(self, user_id: int) -> User | None:
+        """Получить активного пользователя по ID."""
+        filters = [
+            User.id == user_id,
+            User.is_active.is_(True),
+        ]
+        return await self.db.scalar(select(User).filter(*filters))
+
+    async def get_all(self, page: int, page_size: int) -> tuple[User, int]:
         """Получить всех пользователей по ID."""
         total_stmt = select(func.count()).select_from(User)
         total = await self.db.scalar(total_stmt) or 0
@@ -34,3 +36,45 @@ class UserRepository:
         )
         items = (await self.db.scalars(users_stmt)).all()
         return items, total
+
+    async def create(self, email: str, hashed_password: str, full_name: str) -> User:
+        """Создать пользователя."""
+        db_user = User(
+            email=email,
+            hashed_password=hashed_password,
+            full_name=full_name,
+        )
+        self.db.add(db_user)
+        await self.db.commit()
+        return db_user
+
+    async def update(
+            self,
+            user_id: int,
+            email: str | None,
+            password: str | None,
+            full_name: str | None,
+    ) -> User:
+        """Обновить пользователя."""
+        await self.db.execute(
+            update(User)
+            .where(User.id == user_id)
+            .values(
+                email=email,
+                hashed_password=password,
+                full_name=full_name,
+            ),
+        )
+        await self.db.commit()
+        return await self.get_by_id(user_id)
+
+    async def delete(self, user_delete: User) -> User:
+        """Удалить пользователя."""
+        user_delete.is_active = False
+        await self.db.commit()
+        await self.db.refresh(user_delete)
+        return user_delete
+
+    async def user_exists(self, email: str) -> bool:
+        """Проверить, существует ли пользователь с таким email."""
+        return await self.db.scalar(select(User).where(User.email == email)) is not None

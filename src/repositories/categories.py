@@ -37,7 +37,7 @@ class CategoryRepository:
         await self.db.refresh(db_category)
         return db_category
 
-    async def update(self, category_id: int, data: dict) -> Category | None:
+    async def update(self, category_id: int, data: dict) -> Category:
         """Обновить категорию."""
         await self.db.execute(
             update(Category)
