@@ -37,7 +37,6 @@ async def refresh_token(
 async def refresh_access_token(
     refresh_request: RefreshTokenRequest,
     auth_service: AuthService = Depends(get_auth_service),
-
 ) -> dict:
     """Обновляет access-токен, принимая старый refresh-токен в теле запроса."""
     user = await auth_service.get_current_user_by_refresh_token(refresh_request.refresh_token)

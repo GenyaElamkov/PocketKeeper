@@ -1,22 +1,64 @@
 import jwt
 from fastapi import HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
 
 from src.core.config import settings
-from src.repositories.auth import AuthRepository
 from src.repositories.users import UserRepository
-from src.schemas.users import User, UserUpdateRefreshToken
+from src.schemas.users import User, UserRole, UserUpdateRefreshToken
 from src.services.utils import (create_access_token, create_refresh_token,
                                 verify_password)
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.api.prefix}/auth/token")
 
 
 class AuthService:
     """Сервис аутентификации."""
-    def __init__(self, auth_repo: AuthRepository, user_repo: UserRepository):
-        self.auth_repo = auth_repo
+    def __init__(self, user_repo: UserRepository):
         self.user_repo = user_repo
+
+    async def get_current_user(self, token: str) -> User:
+        """Получение текущего пользователя."""
+        creditals_exception = HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+        try:
+            payload = jwt.decode(token, settings.auth.secret_key, algorithms=[settings.auth.algorithm])
+            email: str | None = payload.get("sub")
+            token_type: str | None = payload.get("token_type")
+            if email is None or token_type != "access":
+                raise creditals_exception
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token has expired",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        except jwt.PyJWTError:
+            raise creditals_exception
+        user = await self.user_repo.get_active_by_email(email)
+        if user is None:
+            raise creditals_exception
+        return user
+
+    async def get_current_admin(self, token: str) -> User:
+        """Получение текущего пользователя с ролью 'admin'."""
+        current_user = await self.get_current_user(token)
+        if current_user.role != UserRole.ADMIN:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have enough permissions",
+            )
+        return current_user
+
+    async def get_current_member(self, token: str) -> User:
+        """Получение текущего пользователя c ролью 'member'."""
+        current_user = await self.get_current_user(token)
+        if current_user.role != UserRole.MEMBER:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have enough permissions",
+            )
+        return current_user
 
     async def get_current_user_by_refresh_token(self, refresh_token: str) -> User:
         """Получение текущего пользователя по refresh-токену."""

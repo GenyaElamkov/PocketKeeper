@@ -4,12 +4,14 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import async_session_maker
+from src.core.security import oauth2_scheme
 from src.repositories.accounts import AccountRepository
 from src.repositories.categories import CategoryRepository
 from src.repositories.transactions import TransactionRepository
 from src.repositories.users import UserRepository
+from src.schemas.users import User
 from src.services.accounts import AccountService
-from src.services.auth import AuthRepository, AuthService
+from src.services.auth import AuthService
 from src.services.categories import CategoryService
 from src.services.transactions import TransactionService
 from src.services.users import UserService
@@ -24,10 +26,6 @@ def get_user_repository(db: AsyncSession = Depends(get_async_db)) -> UserReposit
     return UserRepository(db=db)
 
 
-def get_auth_repository(db: AsyncSession = Depends(get_async_db)) -> AuthRepository:
-    return AuthRepository(db=db)
-
-
 def get_category_repository(db: AsyncSession = Depends(get_async_db)) -> CategoryRepository:
     return CategoryRepository(db=db)
 
@@ -40,19 +38,12 @@ def get_transaction_repository(db: AsyncSession = Depends(get_async_db)) -> Tran
     return TransactionRepository(db=db)
 
 
-def get_auth_service(
-        auth_repo: AuthRepository = Depends(get_auth_repository),
-        user_repo: UserRepository = Depends(get_user_repository),
-
-) -> AuthService:
-    return AuthService(
-        auth_repo=auth_repo,
-        user_repo=user_repo,
-    )
-
-
 def get_user_service(repo: UserRepository = Depends(get_user_repository)) -> UserService:
     return UserService(user_repo=repo)
+
+
+def get_auth_service(user_repo: UserRepository = Depends(get_user_repository)) -> AuthService:
+    return AuthService(user_repo=user_repo)
 
 
 def get_category_service(repo: CategoryRepository = Depends(get_category_repository)) -> CategoryService:
@@ -73,3 +64,26 @@ def get_transaction_service(
         account_repo=account_repo,
         category_repo=category_repo,
     )
+
+
+async def get_current_user(
+        token: str = Depends(oauth2_scheme),
+        auth_service: AuthService = Depends(get_auth_service),
+) -> User:
+    """Получение текущего пользователя по токену."""
+    return await auth_service.get_current_user(token)
+
+
+async def get_current_admin(
+        token: str = Depends(oauth2_scheme),
+        auth_service: AuthService = Depends(get_auth_service),
+) -> User:
+    """Получение текущего админа по токену."""
+    return await auth_service.get_current_admin(token)
+
+
+async def get_current_member(
+        token: str = Depends(oauth2_scheme),
+        auth_service: AuthService = Depends(get_auth_service),
+) -> User:
+    return await auth_service.get_current_member(token)
