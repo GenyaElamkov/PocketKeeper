@@ -7,7 +7,7 @@ from src.schemas.users import UserCreate as UserCreateSchema
 from src.schemas.users import UserList as UserListSchema
 from src.schemas.users import UserRequest as UserRequestSchema
 from src.schemas.users import UserUpdate as UserUpdateSchema
-from src.services.auth import get_current_admin, get_current_user
+from src.services.current import get_current_admin, get_current_user
 from src.services.users import UserService
 
 router = APIRouter(

@@ -8,7 +8,7 @@ from src.schemas.accounts import Account as AccountSchema
 from src.schemas.accounts import AccountCreate as AccountCreateSchema
 from src.schemas.accounts import AccountUpdate as AccountUpdateSchema
 from src.services.accounts import AccountService
-from src.services.auth import get_current_member
+from src.services.current import get_current_member
 
 router = APIRouter(
     prefix="/accounts",

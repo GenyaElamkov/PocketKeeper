@@ -21,6 +21,14 @@ class UserRepository:
         ]
         return await self.db.scalar(select(User).filter(*filters))
 
+    async def get_active_by_email(self, email: str) -> User | None:
+        """Получить активного пользователя по email."""
+        filters = [
+            User.email == email,
+            User.is_active.is_(True),
+        ]
+        return await self.db.scalar(select(User).filter(*filters))
+
     async def get_all(self, page: int, page_size: int) -> tuple[User, int]:
         """Получить всех пользователей по ID."""
         total_stmt = select(func.count()).select_from(User)

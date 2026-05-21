@@ -5,7 +5,7 @@ from src.models.users import User as UserModel
 from src.schemas.transactions import (Transaction, TransactionCreate,
                                       TransactionList, TransactionRequest,
                                       TransactionUpdate)
-from src.services.auth import get_current_member
+from src.services.current import get_current_member
 from src.services.transactions import TransactionService
 
 router = APIRouter(

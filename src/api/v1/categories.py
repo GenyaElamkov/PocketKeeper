@@ -7,8 +7,8 @@ from src.models.users import User as UserModel
 from src.schemas.categories import Category as CategorySchema
 from src.schemas.categories import CategoryCreate as CategoryCreateSchema
 from src.schemas.categories import CategoryUpdate as CategoryUpdateSchema
-from src.services.auth import get_current_member
 from src.services.categories import CategoryService
+from src.services.current import get_current_member
 
 router = APIRouter(
     prefix="/categories",

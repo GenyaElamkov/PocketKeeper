@@ -9,6 +9,7 @@ from src.repositories.categories import CategoryRepository
 from src.repositories.transactions import TransactionRepository
 from src.repositories.users import UserRepository
 from src.services.accounts import AccountService
+from src.services.auth import AuthRepository, AuthService
 from src.services.categories import CategoryService
 from src.services.transactions import TransactionService
 from src.services.users import UserService
@@ -23,6 +24,10 @@ def get_user_repository(db: AsyncSession = Depends(get_async_db)) -> UserReposit
     return UserRepository(db=db)
 
 
+def get_auth_repository(db: AsyncSession = Depends(get_async_db)) -> AuthRepository:
+    return AuthRepository(db=db)
+
+
 def get_category_repository(db: AsyncSession = Depends(get_async_db)) -> CategoryRepository:
     return CategoryRepository(db=db)
 
@@ -35,7 +40,18 @@ def get_transaction_repository(db: AsyncSession = Depends(get_async_db)) -> Tran
     return TransactionRepository(db=db)
 
 
-def get_user_service(repo: UserRepository = Depends(get_user_repository)) -> UserRepository:
+def get_auth_service(
+        auth_repo: AuthRepository = Depends(get_auth_repository),
+        user_repo: UserRepository = Depends(get_user_repository),
+
+) -> AuthService:
+    return AuthService(
+        auth_repo=auth_repo,
+        user_repo=user_repo,
+    )
+
+
+def get_user_service(repo: UserRepository = Depends(get_user_repository)) -> UserService:
     return UserService(user_repo=repo)
 
 
