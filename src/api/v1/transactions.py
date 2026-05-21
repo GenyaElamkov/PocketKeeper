@@ -2,14 +2,9 @@ from fastapi import APIRouter, Depends, status
 
 from src.core.dependencies import get_transaction_service
 from src.models.users import User as UserModel
-from src.schemas.transactions import Transaction as TransactionSchema
-from src.schemas.transactions import \
-    TransactionCreate as TransactionCreateSchema
-from src.schemas.transactions import TransactionList as TransactionListSchema
-from src.schemas.transactions import \
-    TransactionRequest as TransactionRequestSchema
-from src.schemas.transactions import \
-    TransactionUpdate as TransactionUpdateSchema
+from src.schemas.transactions import (Transaction, TransactionCreate,
+                                      TransactionList, TransactionRequest,
+                                      TransactionUpdate)
 from src.services.auth import get_current_member
 from src.services.transactions import TransactionService
 
@@ -20,47 +15,47 @@ router = APIRouter(
 
 
 @router.get("/", name="Список транзакций",
-            response_model=TransactionListSchema)
+            response_model=TransactionList)
 async def get_all_transactions(
-    request: TransactionRequestSchema = Depends(),
+    request: TransactionRequest = Depends(),
     transaction_service: TransactionService = Depends(get_transaction_service),
     current_user: UserModel = Depends(get_current_member),
-) -> TransactionListSchema:
+) -> TransactionList:
     """Список транзакций"""
     return await transaction_service.get_all(request, current_user.id)
 
 
 @router.post("/", name="Создать транзакцию",
-             response_model=TransactionSchema,
+             response_model=Transaction,
              status_code=status.HTTP_201_CREATED)
 async def create_transaction(
-    transaction: TransactionCreateSchema,
+    transaction: TransactionCreate,
     transaction_service: TransactionService = Depends(get_transaction_service),
     current_user: UserModel = Depends(get_current_member),
-) -> TransactionSchema:
+) -> Transaction:
     """Создание транзакции"""
     return await transaction_service.create_transaction(transaction, current_user.id)
 
 
-@router.put("/{transaction_id}", name="Обновить транзакцию", response_model=TransactionSchema)
+@router.put("/{transaction_id}", name="Обновить транзакцию", response_model=Transaction)
 async def update_transaction(
     transaction_id: int,
-    update_data: TransactionUpdateSchema,
+    update_data: TransactionUpdate,
     transaction_service: TransactionService = Depends(get_transaction_service),
     current_user: UserModel = Depends(get_current_member),
-) -> TransactionSchema:
+) -> Transaction:
     """Обновление транзакции"""
     return await transaction_service.update_transaction(transaction_id, update_data, current_user.id)
 
 
 @router.delete("/{transaction_id}",
                name="Удалить транзакцию",
-               response_model=TransactionSchema,
+               response_model=Transaction,
                status_code=status.HTTP_200_OK)
 async def delete_transaction(
     transaction_id: int,
     transaction_service: TransactionService = Depends(get_transaction_service),
     current_user: UserModel = Depends(get_current_member),
-) -> TransactionSchema:
+) -> Transaction:
     """Удаление транзакции"""
     return await transaction_service.delete_transaction(transaction_id, current_user.id)
