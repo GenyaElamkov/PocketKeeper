@@ -2,8 +2,7 @@ from fastapi import APIRouter, Depends, status
 
 from src.core.dependencies import (get_current_admin, get_current_user,
                                    get_user_service)
-from src.schemas.users import (User, UserCreate, UserList, UserRequest,
-                               UserUpdate)
+from src.schemas.users import User, UserList, UserRequest, UserUpdate
 from src.services.users import UserService
 
 router = APIRouter(
@@ -23,9 +22,20 @@ async def get_all_users(
     return await user_service.get_all_users(request)
 
 
+@router.get("/me",
+            name="Текущий пользователь",
+            response_model=User)
+async def get_current_user(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """Получение текущего пользователя."""
+    return current_user
+
+
 @router.get("/{user_id}",
             name="Пользователь",
-            response_model=User)
+            response_model=User,
+            deprecated=True)
 async def get_user(
     user_id: int,
     user_service: UserService = Depends(get_user_service),
@@ -33,17 +43,6 @@ async def get_user(
 ) -> User:
     """Получение пользователя по ID."""
     return await user_service.get_user_by_id(current_user_id=current_user.id, user_id=user_id)
-
-
-@router.post("/", name="Создать пользователя",
-             response_model=User,
-             status_code=status.HTTP_201_CREATED)
-async def create_user(
-    user: UserCreate,
-    user_service: UserService = Depends(get_user_service),
-) -> User:
-    """Создание пользователя."""
-    return await user_service.create_user(user)
 
 
 @router.put("/{user_id}",

@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.v1 import main_router
 from src.core.config import settings
@@ -19,6 +20,18 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     description="API для PocketKeeper",
     lifespan=lifespan,
+)
+
+origins = [
+    "http://localhost:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    allow_credentials=True,
 )
 
 

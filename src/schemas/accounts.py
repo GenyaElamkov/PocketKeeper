@@ -1,7 +1,7 @@
 from decimal import Decimal
 from enum import Enum
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class AccountCurrency(str, Enum):
@@ -35,6 +35,14 @@ class AccountCreate(BaseModel):
         max_digits=10,
         decimal_places=2,
     )
+
+    @model_validator(mode="before")
+    @classmethod
+    def strip_name(cls, values):
+        if isinstance(values, dict):
+            if "name" in values:
+                values["name"] = values["name"].strip()
+        return values
 
 
 class Account(BaseModel):
@@ -72,4 +80,11 @@ class AccountUpdate(BaseModel):
         max_digits=10,
         decimal_places=2,
     )
-    is_active: bool | None = Field(None, description="Архивирован ли счет (скрыт из выбора)")
+
+    @model_validator(mode="before")
+    @classmethod
+    def strip_name(cls, values):
+        if isinstance(values, dict):
+            if "name" in values:
+                values["name"] = values["name"].strip()
+        return values

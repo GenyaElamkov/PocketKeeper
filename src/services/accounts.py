@@ -13,17 +13,10 @@ class AccountService:
 
     async def get_accounts_by_user(self, user_id: int) -> Sequence[Account]:
         """Получить все счета конкретного пользователя."""
-        db_accounts = await self.account_repo.get_all_by_user_id(user_id)
-        if not db_accounts:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Accounts not found",
-            )
-        return db_accounts
+        return await self.account_repo.get_all_by_user_id(user_id)
 
     async def create_account(self, account: AccountCreate, user_id: int) -> Account:
-        """Создать аккаунт."""
-        # Проверяем, что счет с таким именем уже существует
+        """Создать счет."""
         name_account = await self.account_repo.user_account_by_name_exists(
             name=account["name"],
             user_id=user_id,

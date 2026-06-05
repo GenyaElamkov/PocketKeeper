@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.accounts import Account
@@ -21,16 +21,21 @@ class AccountRepository:
 
     async def get_all_by_user_id(self, user_id: int) -> Sequence[Account]:
         """Получить счета пользователя."""
+        filters = [
+            Account.user_id == user_id,
+            Account.is_active.is_(True),
+        ]
         db_acount = await self.db.scalars(
-            select(Account).filter(Account.user_id == user_id),
+            select(Account).filter(*filters),
         )
         return db_acount.all()
 
     async def user_account_by_name_exists(self, name: str, user_id: int) -> bool:
         """Проверить, что счет пользователя с таким именем уже существует."""
         filters = [
-            Account.name == name,
+            func.lower(Account.name) == name.lower(),
             Account.user_id == user_id,
+            Account.is_active.is_(True),
         ]
         return await self.db.scalar(select(Account).filter(*filters)) is not None
 
