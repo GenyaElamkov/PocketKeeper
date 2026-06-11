@@ -55,7 +55,7 @@ class Account(BaseModel):
     )
     type: AccountType = Field(..., description="Тип счета (cash, card, deposit)") # noqa
     currency: AccountCurrency = Field(..., description="Код валюты (RUB, USD)")
-    balance: Decimal | None = Field(None, description="Текущий баланс",
+    balance: Decimal | None = Field(None, description="Текущий баланс (None, если не рассчитан)",
                                     max_digits=10, decimal_places=2)
     initial_balance: Decimal = Field(
         ...,
