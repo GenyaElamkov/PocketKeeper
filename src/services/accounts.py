@@ -26,6 +26,7 @@ class AccountService:
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Account with this name already exists",
             )
+
         return await self.account_repo.create(account, user_id=user_id)
 
     async def update_account(self, account_id: int, account: AccountUpdate, user_id: int) -> Account:

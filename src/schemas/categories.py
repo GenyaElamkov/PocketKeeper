@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class CategoryCreate(BaseModel):
@@ -20,6 +20,14 @@ class CategoryCreate(BaseModel):
         None,
         description="Идентификатор родительской категории (опционально)",
     )
+
+    @model_validator(mode="before")
+    @classmethod
+    def strip_name(cls, values):
+        if isinstance(values, dict):
+            if "name" in values:
+                values["name"] = values["name"].strip()
+        return values
 
 
 class Category(CategoryCreate):

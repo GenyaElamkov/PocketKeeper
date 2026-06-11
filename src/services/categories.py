@@ -37,6 +37,15 @@ class CategoryService:
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="You can't create a category for another user",
                 )
+        name_category = await self.category_repo.name_exists(
+            name=category.name,
+            user_id=user_id,
+        )
+        if name_category:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Category with this name already exists",
+            )
         return await self.category_repo.create(category.model_dump(exclude_unset=True), user_id=user_id)
 
     async def update_category(self, category_id: int, category: CategoryUpdate, user_id: int) -> Category:

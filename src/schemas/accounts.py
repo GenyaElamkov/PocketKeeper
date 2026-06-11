@@ -31,7 +31,7 @@ class AccountCreate(BaseModel):
     currency: AccountCurrency = Field(..., description="Код валюты (RUB, USD)")
     initial_balance: Decimal = Field(
         ...,
-        description="Текущий баланс",
+        description="Начальный баланс",
         max_digits=10,
         decimal_places=2,
     )
@@ -57,6 +57,12 @@ class Account(BaseModel):
     currency: AccountCurrency = Field(..., description="Код валюты (RUB, USD)")
     balance: Decimal | None = Field(None, description="Текущий баланс",
                                     max_digits=10, decimal_places=2)
+    initial_balance: Decimal = Field(
+        ...,
+        description="Начальный баланс",
+        max_digits=10,
+        decimal_places=2,
+    )
     is_active: bool = Field(
         default=False,
         description="Архивирован ли счет (скрыт из выбора)",
