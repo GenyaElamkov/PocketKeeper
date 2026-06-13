@@ -82,7 +82,7 @@ class AccountUpdate(BaseModel):
     currency: AccountCurrency | None = Field(..., description="Код валюты (RUB, USD)")
     initial_balance: Decimal | None = Field(
         None,
-        description="Текущий баланс",
+        description="Начальный баланс",
         max_digits=10,
         decimal_places=2,
     )

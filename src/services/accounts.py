@@ -3,13 +3,20 @@ from collections.abc import Sequence
 from fastapi import HTTPException, status
 
 from src.repositories.accounts import AccountRepository
+from src.repositories.transactions import TransactionRepository
 from src.schemas.accounts import Account, AccountCreate, AccountUpdate
 
 
 class AccountService:
     """Сервис для работы с счетами."""
-    def __init__(self, account_repo: AccountRepository):
+    def __init__(
+            self,
+            account_repo: AccountRepository,
+            transaction_repo: TransactionRepository,
+
+    ):
         self.account_repo = account_repo
+        self.transaction_repo = transaction_repo
 
     async def get_accounts_by_user(self, user_id: int) -> Sequence[Account]:
         """Получить все счета конкретного пользователя."""
@@ -43,7 +50,16 @@ class AccountService:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can't update an account for another user",
             )
-        return await self.account_repo.update(account_id, account.model_dump())
+        # Проверяем, что баланс не изменился и транзакций нет
+        if 'initial_balance' in account and account['initial_balance'] != db_account.initial_balance:
+            transactions = await self.transaction_repo.transaction_exists(account_id)
+            if transactions:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="You can't update an account with transactions",
+                )
+            account['balance'] = account["initial_balance"]
+        return await self.account_repo.update(account_id, account)
 
     async def delete_account(self, account_id: int, user_id: int) -> Account:
         """Удалить счет."""

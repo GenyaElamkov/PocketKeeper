@@ -93,6 +93,15 @@ class TransactionRepository:
         ]
         return await self.db.scalar(select(Transaction).filter(*filters))
 
+    async def transaction_exists(self, account_id: int) -> bool:
+        """Проверить, существует ли транзакция по Account.id с указанным ID."""
+        filters = [
+            Transaction.account_id == account_id,
+            Transaction.is_active.is_(True),
+
+        ]
+        return await self.db.scalar(select(Transaction).filter(*filters)) is not None
+
     async def delete(self, delete_transaction: Transaction) -> None:
         """Мягко удалить транзакцию."""
         delete_transaction.is_active = False

@@ -41,7 +41,7 @@ async def update_account(
     current_user: User = Depends(get_current_member),
 ) -> Account:
     """Обновление счета."""
-    return await account_service.update_account(account_id, account, current_user.id)
+    return await account_service.update_account(account_id, account.model_dump(), current_user.id)
 
 
 @router.delete(
