@@ -44,6 +44,12 @@ class AccountCreate(BaseModel):
                 values["name"] = values["name"].strip()
         return values
 
+    @model_validator(mode="after")
+    def initial_balance_must_be_non_negative(self):
+        if self.initial_balance < 0:
+            raise ValueError("Initial balance must be non-negative")
+        return self
+
 
 class Account(BaseModel):
     """Модель счета"""
@@ -94,3 +100,9 @@ class AccountUpdate(BaseModel):
             if "name" in values:
                 values["name"] = values["name"].strip()
         return values
+
+    @model_validator(mode="after")
+    def intitial_balance_must_be_non_negative(self):
+        if self.initial_balance is not None and self.initial_balance < 0:
+            raise ValueError("Initial balance must be non-negative")
+        return self
