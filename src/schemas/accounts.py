@@ -27,7 +27,7 @@ class AccountCreate(BaseModel):
         description="Название счета (например, 'Кошелек')",
         max_length=100,
     )
-    type: AccountType = Field(..., description="Тип счета (cash, card, deposit)") # noqa
+    account_type: AccountType = Field(..., description="Тип счета (cash, card, deposit)") # noqa
     currency: AccountCurrency = Field(..., description="Код валюты (RUB, USD)")
     initial_balance: Decimal = Field(
         ...,
@@ -59,7 +59,7 @@ class Account(BaseModel):
         description="Название счета (например, 'Кошелек')",
         max_length=100,
     )
-    type: AccountType = Field(..., description="Тип счета (cash, card, deposit)") # noqa
+    account_type: AccountType = Field(..., description="Тип счета (cash, card, deposit)") # noqa
     currency: AccountCurrency = Field(..., description="Код валюты (RUB, USD)")
     balance: Decimal | None = Field(None, description="Текущий баланс (None, если не рассчитан)",
                                     max_digits=10, decimal_places=2)
@@ -84,7 +84,7 @@ class AccountUpdate(BaseModel):
         description="Название счета (например, 'Кошелек')",
         max_length=100,
     )
-    type: AccountType | None = Field(..., description="Тип счета (cash, card, deposit)") # noqa
+    account_type: AccountType | None = Field(..., description="Тип счета (cash, card, deposit)") # noqa
     currency: AccountCurrency | None = Field(..., description="Код валюты (RUB, USD)")
     initial_balance: Decimal | None = Field(
         None,

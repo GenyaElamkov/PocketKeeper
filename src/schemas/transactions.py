@@ -22,7 +22,7 @@ class TransactionCreate(BaseModel):
         decimal_places=2,
         gt=0,
     )
-    type: TransactionType = Field(..., description="Тип транзакции (доходы/расходы)")    # noqa
+    transaction_type: TransactionType = Field(..., description="Тип транзакции (доходы/расходы)")    # noqa
     description: str | None = Field(
         None,
         description="Комментарий/описание покупки",
@@ -49,7 +49,7 @@ class TransactionUpdate(BaseModel):
         decimal_places=2,
         gt=0,
     )
-    type: TransactionType | None = Field(None, description="Тип транзакции (доходы/расходы)")    # noqa
+    transaction_type: TransactionType | None = Field(None, description="Тип транзакции (доходы/расходы)")    # noqa
     description: str | None = Field(
         None,
         description="Комментарий/описание покупки",

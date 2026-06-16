@@ -59,8 +59,8 @@ class TransactionRepository:
     async def update_account_balance(self, account_id: int) -> None:
         """Обновить баланс счета."""
         balance_delta = case(
-            (Transaction.type == TransactionType.income, Transaction.amount),
-            (Transaction.type == TransactionType.expense, -Transaction.amount),
+            (Transaction.transaction_type == TransactionType.income, Transaction.amount),
+            (Transaction.transaction_type == TransactionType.expense, -Transaction.amount),
             else_=0,
         )
 
