@@ -41,7 +41,7 @@ class TransactionRepository:
         transaction_stmt = (
             select(Transaction)
             .where(*filters)
-            .order_by(Transaction.transaction_date.desc())
+            .order_by(Transaction.transaction_date.desc(), Transaction.id.desc())
             .offset((page - 1) * page_size)
             .limit(page_size)
         )
