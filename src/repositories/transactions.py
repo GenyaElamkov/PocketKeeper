@@ -21,8 +21,11 @@ class TransactionRepository:
         page: int,
         page_size: int,
         transaction_date: Optional[date] = None,
+        date_from: Optional[date] = None,
+        date_to: Optional[date] = None,
         category_id: Optional[int] = None,
         account_id: Optional[int] = None,
+        transaction_type: Optional[TransactionType] = None,
         date_sort: bool = False,
     ) -> tuple[Sequence[Transaction], int]:
         """Получить все транзакции пользователя."""
@@ -37,10 +40,18 @@ class TransactionRepository:
 
         if transaction_date:
             filters.append(Transaction.transaction_date == transaction_date)
+
+        if date_from and date_to:
+            filters.append(Transaction.transaction_date.between(date_from, date_to))
+
         if category_id:
             filters.append(Transaction.category_id == category_id)
+
         if account_id:
             filters.append(Transaction.account_id == account_id)
+
+        if transaction_type:
+            filters.append(Transaction.transaction_type == transaction_type)
 
         total_stmt = select(func.count()).select_from(Transaction).where(*filters)
         total = await self.db.scalar(total_stmt) or 0

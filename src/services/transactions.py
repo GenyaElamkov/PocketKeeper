@@ -27,8 +27,11 @@ class TransactionService:
             page=request.page,
             page_size=request.page_size,
             transaction_date=request.transaction_date,
+            date_from=request.date_from,
+            date_to=request.date_to,
             category_id=request.category_id,
             account_id=request.account_id,
+            transaction_type=request.transaction_type,
             date_sort=request.date_sort,
         )
         return {
