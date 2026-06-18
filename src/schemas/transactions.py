@@ -75,3 +75,4 @@ class TransactionRequest(BaseModel):
     transaction_date: date | None = Field(None, description="Дата создания транзакции")
     category_id: int | None = Field(None, description="Идентификатор категории транзакции")
     account_id: int | None = Field(None, description="Идентификатор счета транзакции")
+    date_sort: bool = Field(False, description="Направление сортировки по дате (asc или desc)")

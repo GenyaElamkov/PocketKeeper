@@ -29,6 +29,7 @@ class TransactionService:
             transaction_date=request.transaction_date,
             category_id=request.category_id,
             account_id=request.account_id,
+            date_sort=request.date_sort,
         )
         return {
             "items": items,

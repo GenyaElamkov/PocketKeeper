@@ -23,12 +23,18 @@ class TransactionRepository:
         transaction_date: Optional[date] = None,
         category_id: Optional[int] = None,
         account_id: Optional[int] = None,
+        date_sort: bool = False,
     ) -> tuple[Sequence[Transaction], int]:
         """Получить все транзакции пользователя."""
         filters = [
             Transaction.user_id == user_id,
             Transaction.is_active.is_(True),
         ]
+        if date_sort:
+            orders = [Transaction.transaction_date.asc(), Transaction.id.asc()]
+        else:
+            orders = [Transaction.transaction_date.desc(), Transaction.id.desc()]
+
         if transaction_date:
             filters.append(Transaction.transaction_date == transaction_date)
         if category_id:
@@ -41,7 +47,7 @@ class TransactionRepository:
         transaction_stmt = (
             select(Transaction)
             .where(*filters)
-            .order_by(Transaction.transaction_date.desc(), Transaction.id.desc())
+            .order_by(*orders)
             .offset((page - 1) * page_size)
             .limit(page_size)
         )
