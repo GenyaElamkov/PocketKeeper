@@ -7,12 +7,14 @@ from src.core.database import async_session_maker
 from src.core.security import oauth2_scheme
 from src.repositories.accounts import AccountRepository
 from src.repositories.categories import CategoryRepository
+from src.repositories.reports import ReportRepository
 from src.repositories.transactions import TransactionRepository
 from src.repositories.users import UserRepository
 from src.schemas.users import User
 from src.services.accounts import AccountService
 from src.services.auth import AuthService
 from src.services.categories import CategoryService
+from src.services.reports import ReportService
 from src.services.transactions import TransactionService
 from src.services.users import UserService
 
@@ -30,12 +32,16 @@ def get_category_repository(db: AsyncSession = Depends(get_async_db)) -> Categor
     return CategoryRepository(db=db)
 
 
-def get_accouht_repository(db: AsyncSession = Depends(get_async_db)) -> AccountRepository:
+def get_account_repository(db: AsyncSession = Depends(get_async_db)) -> AccountRepository:
     return AccountRepository(db=db)
 
 
 def get_transaction_repository(db: AsyncSession = Depends(get_async_db)) -> TransactionRepository:
     return TransactionRepository(db=db)
+
+
+def get_report_repository(db: AsyncSession = Depends(get_async_db)) -> ReportRepository:
+    return ReportRepository(db=db)
 
 
 def get_user_service(repo: UserRepository = Depends(get_user_repository)) -> UserService:
@@ -51,7 +57,7 @@ def get_category_service(repo: CategoryRepository = Depends(get_category_reposit
 
 
 def get_account_service(
-        account_repo: AccountRepository = Depends(get_accouht_repository),
+        account_repo: AccountRepository = Depends(get_account_repository),
         transaction_repo: TransactionRepository = Depends(get_transaction_repository),
 ) -> AccountService:
     return AccountService(
@@ -62,7 +68,7 @@ def get_account_service(
 
 def get_transaction_service(
         transaction_repo: TransactionRepository = Depends(get_transaction_repository),
-        account_repo: AccountRepository = Depends(get_accouht_repository),
+        account_repo: AccountRepository = Depends(get_account_repository),
         category_repo: CategoryRepository = Depends(get_category_repository),
 ) -> TransactionService:
     return TransactionService(
@@ -70,6 +76,12 @@ def get_transaction_service(
         account_repo=account_repo,
         category_repo=category_repo,
     )
+
+
+def get_report_service(
+        report_repo: ReportRepository = Depends(get_report_repository),
+) -> ReportService:
+    return ReportService(report_repo=report_repo)
 
 
 async def get_current_user(

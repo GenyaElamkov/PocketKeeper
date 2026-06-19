@@ -63,7 +63,7 @@ class TransactionList(BaseModel):
     items: list[Transaction] = Field(..., description="Список транзакций")
     total: int = Field(ge=0, description="Общее количество транзакций")
     page: int = Field(ge=1, description="Номер страницы")
-    page_size: int = Field(ge=1, description="Количество элементов на странице")
+    page_size: int = Field(ge=15, description="Количество элементов на странице")
 
     model_config = ConfigDict(from_attributes=True)
 
