@@ -1,8 +1,10 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from loguru import logger
 
+from infrastructure.infra_logging import log_requests_middleware
 from src.api.v1 import main_router
 from src.core.config import settings
 from src.core.database import create_db_and_tables
@@ -35,9 +37,16 @@ app.add_middleware(
 )
 
 
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Логирование запросов."""
+    return await log_requests_middleware(request, call_next)
+
+
 @app.get("/", name="Главная страница", tags=["Главная"])
 async def root():
     """Главная страница. Список версий API."""
+    logger.info("Запрос на главную страницу")
     return {
         "versions": {
             "v1": {"docs": "/docs"},

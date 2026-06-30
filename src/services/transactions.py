@@ -1,4 +1,5 @@
 from fastapi import HTTPException, status
+from loguru import logger
 
 from src.repositories.accounts import AccountRepository
 from src.repositories.categories import CategoryRepository
@@ -45,12 +46,14 @@ class TransactionService:
         """Создать транзакцию."""
         account = await self.account_repo.get_by_id(transaction.account_id)
         if account is None:
+            logger.warning(f"Account with id {transaction.account_id} not found")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Account not found",
             )
         category = await self.category_repo.get_by_id(category_id=transaction.category_id)
         if category is None:
+            logger.warning(f"Category with id {transaction.category_id} not found")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Category not found",
@@ -71,11 +74,13 @@ class TransactionService:
         """Обновить транзакцию."""
         db_transaction = await self.transaction_repo.get_active_transaction_by_id(transaction_id)
         if db_transaction is None:
+            logger.warning(f"Transaction with id {transaction_id} not found")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Transaction not found",
             )
         if db_transaction.user_id != user_id:
+            logger.warning(f"You {user_id} can't update a transaction for another user")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can't update a transaction for another user",
@@ -88,12 +93,14 @@ class TransactionService:
         """Удалить транзакцию."""
         db_transaction = await self.transaction_repo.get_active_transaction_by_id(transaction_id)
         if db_transaction is None:
+            logger.warning(f"Transaction with id {transaction_id} not found")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Transaction not found",
             )
 
         if db_transaction.user_id != user_id:
+            logger.warning(f"You {user_id} can't delete a transaction for another user")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can't delete a transaction for another user",
