@@ -45,20 +45,17 @@ async def get_user(
     return await user_service.get_user_by_id(current_user_id=current_user.id, user_id=user_id)
 
 
-@router.put("/{user_id}",
+@router.put("/me",
             name="Обновить пользователя",
-            response_model=User)
+            response_model=User,
+            deprecated=True)
 async def update_user(
-    user_id: int,
     user: UserUpdate,
     user_service: UserService = Depends(get_user_service),
     current_user: User = Depends(get_current_user),
 ) -> User:
     """Обновление пользователя."""
-    return await user_service.update_user(
-        user_id=user_id,
-        current_user_id=current_user.id,
-        user=user)
+    return await user_service.update_user(current_user_id=current_user.id, user=user)
 
 
 @router.delete("/{user_id}",

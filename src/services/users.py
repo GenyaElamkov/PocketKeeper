@@ -54,33 +54,19 @@ class UserService:
             )
         hashed_password = hash_password(user.password.get_secret_value())
         new_user = await self.user_repo.create(user.email, hashed_password, user.full_name)
-        logger.info(f"User registered: {user.email}")
+        logger.info(f"User registered: {user.id}")
         return new_user
 
-    async def update_user(self, user_id: int, current_user_id: int, user: UserUpdate) -> User:
+    async def update_user(self, current_user_id: int, user: UserUpdate) -> User:
         """Обновить пользователя."""
-        db_user = await self.user_repo.get_by_id(user_id)
-        if db_user is None:
-            logger.warning(f"User with id {user_id} not found")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found",
-            )
-        if db_user.id != current_user_id:
-            logger.warning(f"You {current_user_id} can't update another user's data")
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You can't update another user's data",
-            )
-
         hashed_password = hash_password(user.password.get_secret_value())
         update_user = await self.user_repo.update(
-            user_id=user_id,
+            user_id=current_user_id,
             email=user.email,
             password=hashed_password,
             full_name=user.full_name,
         )
-        logger.info(f"User updated: {user_id}")
+        logger.info(f"User updated: {current_user_id}")
         return update_user
 
     async def delete_user(self, user_id: int, current_user_id: int, role: str) -> User:
@@ -99,5 +85,5 @@ class UserService:
                 detail="You can't delete another user",
             )
         user = await self.user_repo.delete(user_to_delete)
-        logger.info(f"User deleted: {user_id}")
+        logger.info(f"User deleted: {user_id} role {role}")
         return user

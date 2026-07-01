@@ -49,7 +49,7 @@ class AuthService:
         """Получение текущего пользователя с ролью 'admin'."""
         current_user = await self.get_current_user(token)
         if current_user.role != UserRole.ADMIN:
-            logger.warning(f"User {current_user.email} has no admin permissions")
+            logger.warning(f"User {current_user.id} has no admin permissions")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You don't have enough permissions",
@@ -60,7 +60,7 @@ class AuthService:
         """Получение текущего пользователя c ролью 'member'."""
         current_user = await self.get_current_user(token)
         if current_user.role != UserRole.MEMBER:
-            logger.warning(f"User {current_user.email} has no member permissions")
+            logger.warning(f"User {current_user.id} has no member permissions")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You don't have enough permissions",
@@ -111,7 +111,7 @@ class AuthService:
             )
         access_token = create_access_token(data={"sub": user.email, "role": user.role, "id": user.id})
         refresh_token = create_refresh_token(data={"sub": user.email, "role": user.role, "id": user.id})
-        logger.info(f"User logged in: {email}")
+        logger.info(f"User logged in: {user.id}")
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,
@@ -121,7 +121,7 @@ class AuthService:
     async def update_refresh_token(self, user: UserUpdateRefreshToken) -> dict:
         """Обновление refresh-токена."""
         new_refresh_token = create_refresh_token(data={"sub": user.email, "role": user.role, "id": user.id})
-        logger.info(f"Refresh token updated for user: {user.email}")
+        logger.info(f"Refresh token updated for user: {user.id}")
         return {
             "refresh_token": new_refresh_token,
             "token_type": "bearer",
@@ -130,7 +130,7 @@ class AuthService:
     async def update_access_token(self, user: UserUpdateRefreshToken) -> dict:
         """Обновление access-токена."""
         new_access_token = create_access_token(data={"sub": user.email, "role": user.role, "id": user.id})
-        logger.info(f"Access token updated for user: {user.email}")
+        logger.info(f"Access token updated for user: {user.id}")
         return {
             "access_token": new_access_token,
             "token_type": "bearer",

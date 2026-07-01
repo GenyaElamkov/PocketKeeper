@@ -4,10 +4,10 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
-from infrastructure.infra_logging import log_requests_middleware
 from src.api.v1 import main_router
 from src.core.config import settings
 from src.core.database import create_db_and_tables
+from src.infrastructure.infra_logging import log_requests_middleware
 
 
 @asynccontextmanager
