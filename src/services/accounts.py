@@ -86,5 +86,5 @@ class AccountService:
                 detail="You can't delete an account for another user",
             )
         deleted_account = await self.account_repo.delete(db_account)
-        logger.info(f"Account deleted: {deleted_account.id}")
+        logger.info(f"Account deleted: {account_id}")
         return deleted_account

@@ -1,6 +1,7 @@
 from collections.abc import Sequence
 
 from fastapi import HTTPException, status
+from loguru import logger
 
 from src.repositories.categories import CategoryRepository
 from src.schemas.categories import Category, CategoryCreate, CategoryUpdate
@@ -28,11 +29,13 @@ class CategoryService:
         if category.parent_id is not None:
             parent_category = await self.category_repo.get_by_id(category.parent_id)
             if not parent_category:
+                logger.warning(f"Parent category with id {category.parent_id} not found")
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail=f"Parent category with id {category.parent_id} not found",
                 )
             if parent_category.user_id != user_id:
+                logger.warning(f"Permission denied: user {user_id} attempted to create a category for another user")
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="You can't create a category for another user",
@@ -42,38 +45,49 @@ class CategoryService:
             user_id=user_id,
         )
         if name_category:
+            logger.warning(f"Category with name {category.id} already exists")
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Category with this name already exists",
             )
-        return await self.category_repo.create(category.model_dump(exclude_unset=True), user_id=user_id)
+        new_category = await self.category_repo.create(category.model_dump(exclude_unset=True), user_id=user_id)
+        logger.info(f"Category created: {new_category.id}")
+        return new_category
 
     async def update_category(self, category_id: int, category: CategoryUpdate, user_id: int) -> Category:
         """Обновить категорию."""
         db_category = await self.category_repo.get_by_id(category_id)
         if db_category is None:
+            logger.warning(f"Category with id {category_id} not found")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Category not found",
             )
         if db_category.user_id != user_id:
+            logger.warning(f"Permission denied: user {user_id} attempted to update a category for another user")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can't update a category for another user",
             )
-        return await self.category_repo.update(category_id, category.model_dump(exclude_unset=True))
+        updated_category = await self.category_repo.update(category_id, category.model_dump(exclude_unset=True))
+        logger.info(f"Category updated: {updated_category.id}")
+        return updated_category
 
     async def delete_category(self, category_id: int, user_id: int) -> Category:
         """Мягко удалить активную категорию."""
         db_category = await self.category_repo.get_by_id(category_id)
         if db_category is None:
+            logger.warning(f"Category with id {category_id} not found")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Category not found",
             )
         if db_category.user_id != user_id:
+            logger.warning(f"Permission denied: user {user_id} attempted to delete a category for another user")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can't delete a category for another user",
             )
-        return await self.category_repo.delete(db_category)
+        deleted_category = await self.category_repo.delete(db_category)
+        logger.info(f"Account deleted: {category_id}")
+        return deleted_category
