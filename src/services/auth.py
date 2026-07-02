@@ -27,21 +27,25 @@ class AuthService:
             email: str | None = payload.get("sub")
             token_type: str | None = payload.get("token_type")
             if email is None or token_type != "access":
-                logger.warning("Could not validate credentials")
+                logger.warning(
+                    {"event": "get_current_user_failed", "reason": "could not validate credentials"})
                 raise creditals_exception
         except jwt.ExpiredSignatureError:
-            logger.warning("Token has expired")
+            logger.warning(
+                    {"event": "get_current_user_failed", "reason": "token has expired"})
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token has expired",
                 headers={"WWW-Authenticate": "Bearer"},
             )
         except jwt.PyJWTError:
-            logger.warning("Could not validate credentials")
+            logger.warning(
+                {"event": "get_current_user_failed", "reason": "could not validate credentials"})
             raise creditals_exception
         user = await self.user_repo.get_active_by_email(email)
         if user is None:
-            logger.error("Could not validate credentials")
+            logger.warning(
+                {"event": "get_current_user_failed", "reason": "user not found"})
             raise creditals_exception
         return user
 
@@ -49,7 +53,8 @@ class AuthService:
         """Получение текущего пользователя с ролью 'admin'."""
         current_user = await self.get_current_user(token)
         if current_user.role != UserRole.ADMIN:
-            logger.warning(f"User {current_user.id} has no admin permissions")
+            logger.warning(
+                {"event": "get_current_admin_failed", "reason": "user has no admin permissions"})
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You don't have enough permissions",
@@ -60,7 +65,8 @@ class AuthService:
         """Получение текущего пользователя c ролью 'member'."""
         current_user = await self.get_current_user(token)
         if current_user.role != UserRole.MEMBER:
-            logger.warning(f"User {current_user.id} has no member permissions")
+            logger.warning(
+                {"event": "get_current_member_failed", "reason": "user has no member permissions"})
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You don't have enough permissions",
@@ -79,19 +85,27 @@ class AuthService:
             email: str | None = payload.get("sub")
             token_type: str | None = payload.get("token_type")
             if email is None or token_type != "refresh":
-                logger.warning(f"Invalid token: {refresh_token}")
+                logger.warning(
+                    {"event": "get_current_user_by_refresh_token_failed", "reason": "invalid token"},
+                )
                 raise credentials_exception
 
         except jwt.ExpiredSignatureError:
-            logger.warning(f"Token has expired: {refresh_token}")
+            logger.warning(
+                {"event": "get_current_user_by_refresh_token_failed", "reason": "token has expired"},
+            )
             raise credentials_exception
         except jwt.PyJWTError:
-            logger.warning(f"Invalid token: {refresh_token}")
+            logger.warning(
+                {"event": "get_current_user_by_refresh_token_failed", "reason": "invalid token"},
+            )
             raise credentials_exception
 
         user = await self.user_repo.get_active_by_email(email)
         if user is None:
-            logger.warning(f"User not found: {email}")
+            logger.warning(
+                {"event": "get_current_user_by_refresh_token_failed", "reason": "user not found"},
+            )
             raise credentials_exception
         return user
 
@@ -103,7 +117,9 @@ class AuthService:
             plane_password=password,
             hashed_password=user.hashed_password,
         ):
-            logger.warning(f"Faield login attempt for {email}: invalid credentials")
+            logger.warning(
+                {"event": "create_login_token_failed", "reason": "invalid credentials"},
+            )
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Неверный логин или пароль",
@@ -111,7 +127,9 @@ class AuthService:
             )
         access_token = create_access_token(data={"sub": user.email, "role": user.role, "id": user.id})
         refresh_token = create_refresh_token(data={"sub": user.email, "role": user.role, "id": user.id})
-        logger.info(f"User logged in: {user.id}")
+        logger.info(
+            {"event": "create_login_token_success", "user_id": user.id},
+        )
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,
@@ -121,7 +139,9 @@ class AuthService:
     async def update_refresh_token(self, user: UserUpdateRefreshToken) -> dict:
         """Обновление refresh-токена."""
         new_refresh_token = create_refresh_token(data={"sub": user.email, "role": user.role, "id": user.id})
-        logger.info(f"Refresh token updated for user: {user.id}")
+        logger.info(
+            {"event": "update_refresh_token_success", "user_id": user.id},
+        )
         return {
             "refresh_token": new_refresh_token,
             "token_type": "bearer",
@@ -130,7 +150,9 @@ class AuthService:
     async def update_access_token(self, user: UserUpdateRefreshToken) -> dict:
         """Обновление access-токена."""
         new_access_token = create_access_token(data={"sub": user.email, "role": user.role, "id": user.id})
-        logger.info(f"Access token updated for user: {user.id}")
+        logger.info(
+            {"event": "update_access_token_success", "user_id": user.id},
+        )
         return {
             "access_token": new_access_token,
             "token_type": "bearer",
