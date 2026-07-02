@@ -1,11 +1,17 @@
-import sys
-from time import perf_counter
+from time import perf_counter, time
 
 from fastapi import Request
 from loguru import logger
 
 logger.remove()
-logger.add(sys.stderr, format="{message}", serialize=True, level="INFO")
+logger.add(
+    f"logs/file{time()}.log",
+    retention="10 days",
+    compression="zip",
+    format="{message}",
+    serialize=True,
+    level="INFO",
+)
 
 
 async def log_requests_middleware(request: Request, call_next):

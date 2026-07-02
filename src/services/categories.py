@@ -24,21 +24,21 @@ class CategoryService:
 
     async def create_category(self, category: CategoryCreate, user_id: int) -> Category:
         """Создать категорию."""
-        logger.info({"event": "category_creation_attempt", "username": user_id})
+        logger.info({"event": "category_creation_attempt", "user_id": user_id})
 
         # Проверяем, что родительская категория принадлежит пользователю и существует
         if category.parent_id is not None:
             parent_category = await self.category_repo.get_by_id(category.parent_id)
             if not parent_category:
                 logger.warning(
-                    {"event": "category_creation_failed", "username": user_id, "reason": "parent category not found"})
+                    {"event": "category_creation_failed", "user_id": user_id, "reason": "parent category not found"})
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail=f"Parent category with id {category.parent_id} not found",
                 )
             if parent_category.user_id != user_id:
                 logger.warning(
-                    {"event": "category_creation_failed", "username": user_id, "reason": "permission denied"})
+                    {"event": "category_creation_failed", "user_id": user_id, "reason": "permission denied"})
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="You can't create a category for another user",
@@ -49,60 +49,60 @@ class CategoryService:
         )
         if name_category:
             logger.warning(
-                {"event": "category_creation_failed", "username": user_id, "reason": "category already exists"})
+                {"event": "category_creation_failed", "user_id": user_id, "reason": "category already exists"})
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Category with this name already exists",
             )
         new_category = await self.category_repo.create(category.model_dump(exclude_unset=True), user_id=user_id)
 
-        logger.info({"event": "category_creation_success", "username": user_id})
+        logger.info({"event": "category_creation_success", "user_id": user_id})
         return new_category
 
     async def update_category(self, category_id: int, category: CategoryUpdate, user_id: int) -> Category:
         """Обновить категорию."""
-        logger.info({"event": "category_update_attempt", "username": user_id})
+        logger.info({"event": "category_update_attempt", "user_id": user_id})
 
         db_category = await self.category_repo.get_by_id(category_id)
         if db_category is None:
             logger.warning(
-                    {"event": "category_update_failed", "username": user_id, "reason": "category not found"})
+                    {"event": "category_update_failed", "user_id": user_id, "reason": "category not found"})
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Category not found",
             )
         if db_category.user_id != user_id:
             logger.warning(
-                    {"event": "category_update_failed", "username": user_id, "reason": "permission denied"})
+                    {"event": "category_update_failed", "user_id": user_id, "reason": "permission denied"})
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can't update a category for another user",
             )
         updated_category = await self.category_repo.update(category_id, category.model_dump(exclude_unset=True))
 
-        logger.info({"event": "category_update_success", "username": user_id})
+        logger.info({"event": "category_update_success", "user_id": user_id})
         return updated_category
 
     async def delete_category(self, category_id: int, user_id: int) -> Category:
         """Мягко удалить активную категорию."""
-        logger.info({"event": "category_deletion_attempt", "username": user_id})
+        logger.info({"event": "category_deletion_attempt", "user_id": user_id})
 
         db_category = await self.category_repo.get_by_id(category_id)
         if db_category is None:
             logger.warning(
-                    {"event": "category_deletion_failed", "username": user_id, "reason": "category not found"})
+                    {"event": "category_deletion_failed", "user_id": user_id, "reason": "category not found"})
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Category not found",
             )
         if db_category.user_id != user_id:
             logger.warning(
-                    {"event": "category_deletion_failed", "username": user_id, "reason": "permission denied"})
+                    {"event": "category_deletion_failed", "user_id": user_id, "reason": "permission denied"})
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can't delete a category for another user",
             )
         deleted_category = await self.category_repo.delete(db_category)
 
-        logger.info({"event": "category_deletion_success", "username": user_id})
+        logger.info({"event": "category_deletion_success", "user_id": user_id})
         return deleted_category

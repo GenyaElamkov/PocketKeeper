@@ -44,11 +44,11 @@ class TransactionService:
 
     async def create_transaction(self, transaction: TransactionCreate, user_id: int) -> Transaction:
         """Создать транзакцию."""
-        logger.info({"event": "transaction_creation_attempt", "username": user_id})
+        logger.info({"event": "transaction_creation_attempt", "user_id": user_id})
 
         account = await self.account_repo.get_by_id(transaction.account_id)
         if account is None:
-            logger.warning({"event": "transaction_creation_failed", "username": user_id, "reason": "account not found"})
+            logger.warning({"event": "transaction_creation_failed", "user_id": user_id, "reason": "account not found"})
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Account not found",
@@ -56,7 +56,7 @@ class TransactionService:
         category = await self.category_repo.get_by_id(category_id=transaction.category_id)
         if category is None:
             logger.warning(
-                {"event": "transaction_creation_failed", "username": user_id, "reason": "category not found"})
+                {"event": "transaction_creation_failed", "user_id": user_id, "reason": "category not found"})
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Category not found",
@@ -67,7 +67,7 @@ class TransactionService:
         )
         await self.transaction_repo.update_account_balance(transaction.account_id)
 
-        logger.info({"event": "transaction_creation_success", "username": user_id})
+        logger.info({"event": "transaction_creation_success", "user_id": user_id})
         return new_transaction
 
     async def update_transaction(
@@ -77,53 +77,53 @@ class TransactionService:
             user_id: int,
     ) -> Transaction:
         """Обновить транзакцию."""
-        logger.info({"event": "transaction_update_attempt", "username": user_id})
+        logger.info({"event": "transaction_update_attempt", "user_id": user_id})
 
         db_transaction = await self.transaction_repo.get_active_transaction_by_id(transaction_id)
         if db_transaction is None:
             logger.warning(
-                {"event": "transaction_update_failed", "username": user_id, "reason": "transaction not found"})
+                {"event": "transaction_update_failed", "user_id": user_id, "reason": "transaction not found"})
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Transaction not found",
             )
         if db_transaction.user_id != user_id:
-            logger.warning({"event": "transaction_update_failed", "username": user_id, "reason": "permission denied"})
+            logger.warning({"event": "transaction_update_failed", "user_id": user_id, "reason": "permission denied"})
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can't update a transaction for another user",
             )
         await self.transaction_repo.update(transaction_id, update_data.model_dump(exclude_unset=True))
-        logger.info({"event": "transaction_update_success", "username": user_id})
+        logger.info({"event": "transaction_update_success", "user_id": user_id})
 
         await self.transaction_repo.update_account_balance(update_data.account_id)
-        logger.info({"event": "account_balance_updated", "username": user_id})
+        logger.info({"event": "account_balance_updated", "user_id": user_id})
 
         return await self.transaction_repo.get_active_transaction_by_id(transaction_id)
 
     async def delete_transaction(self, transaction_id: int, user_id: int) -> Transaction:
         """Удалить транзакцию."""
-        logger.info({"event": "transaction_deletion_attempt", "username": user_id})
+        logger.info({"event": "transaction_deletion_attempt", "user_id": user_id})
 
         db_transaction = await self.transaction_repo.get_active_transaction_by_id(transaction_id)
         if db_transaction is None:
             logger.warning(
-                {"event": "transaction_deletion_failed", "username": user_id, "reason": "transaction not found"})
+                {"event": "transaction_deletion_failed", "user_id": user_id, "reason": "transaction not found"})
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Transaction not found",
             )
 
         if db_transaction.user_id != user_id:
-            logger.warning({"event": "transaction_deletion_failed", "username": user_id, "reason": "permission denied"})
+            logger.warning({"event": "transaction_deletion_failed", "user_id": user_id, "reason": "permission denied"})
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can't delete a transaction for another user",
             )
         await self.transaction_repo.delete(db_transaction)
-        logger.info({"event": "transaction_deletion_success", "username": user_id})
+        logger.info({"event": "transaction_deletion_success", "user_id": user_id})
 
         await self.transaction_repo.update_account_balance(db_transaction.account_id)
-        logger.info({"event": "account_balance_updated", "username": user_id})
+        logger.info({"event": "account_balance_updated", "user_id": user_id})
 
         return db_transaction

@@ -14,10 +14,10 @@ class UserService:
 
     async def get_user_by_id(self, current_user_id: int, user_id: int) -> User:
         """Получить пользователя по ID."""
-        logger.info({"event": "get_user_by_id_attempt", "username": user_id})
+        logger.info({"event": "get_user_by_id_attempt", "user_id": user_id})
         if current_user_id != user_id:
             logger.warning(
-                {"event": "get_user_by_id_failed", "username": user_id, "reason": "permission denied"})
+                {"event": "get_user_by_id_failed", "user_id": user_id, "reason": "permission denied"})
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can't access another user's data",
@@ -25,13 +25,13 @@ class UserService:
         user = await self.user_repo.get_by_id(user_id)
         if user is None:
             logger.warning(
-                {"event": "get_user_by_id_failed", "username": user_id, "reason": "user not found"})
+                {"event": "get_user_by_id_failed", "user_id": user_id, "reason": "user not found"})
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found",
             )
         logger.info(
-            {"event": "get_user_by_id_success", "username": current_user_id})
+            {"event": "get_user_by_id_success", "user_id": current_user_id})
         return user
 
     async def get_all_users(self, request: UserRequest) -> UserList:
@@ -49,12 +49,12 @@ class UserService:
 
     async def create_user(self, user: UserCreate) -> User:
         """Создать пользователя."""
-        logger.info({"event": "user_creation_attempt", "username": user.email})
+        logger.info({"event": "user_creation_attempt", "user_id": user.email})
 
         user_existed = await self.user_repo.user_exists(user.email)
         if user_existed:
             logger.warning(
-                {"event": "user_creation_failed", "username": user.email, "reason": "already exists"})
+                {"event": "user_creation_failed", "user_id": user.email, "reason": "already exists"})
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="User with this email already exists",
@@ -62,12 +62,12 @@ class UserService:
         hashed_password = hash_password(user.password.get_secret_value())
         new_user = await self.user_repo.create(user.email, hashed_password, user.full_name)
 
-        logger.info({"event": "user_creation_success", "username": new_user.id})
+        logger.info({"event": "user_creation_success", "user_id": new_user.id})
         return new_user
 
     async def update_user(self, current_user_id: int, user: UserUpdate) -> User:
         """Обновить пользователя."""
-        logger.info({"event": "user_updation_attempt", "username": current_user_id})
+        logger.info({"event": "user_updation_attempt", "user_id": current_user_id})
         hashed_password = hash_password(user.password.get_secret_value())
         update_user = await self.user_repo.update(
             user_id=current_user_id,
@@ -75,27 +75,27 @@ class UserService:
             password=hashed_password,
             full_name=user.full_name,
         )
-        logger.info({"event": "user_updation_success", "username": current_user_id})
+        logger.info({"event": "user_updation_success", "user_id": current_user_id})
         return update_user
 
     async def delete_user(self, user_id: int, current_user_id: int, role: str) -> User:
         """Удалить пользователя."""
-        logger.info({"event": "user_deletion_attempt", "username": user_id})
+        logger.info({"event": "user_deletion_attempt", "user_id": user_id})
         user_to_delete = await self.user_repo.get_active_by_id(user_id)
         if user_to_delete is None:
             logger.warning(
-                {"event": "user_delation_failed", "username": user_id, "reason": "user not found"})
+                {"event": "user_delation_failed", "user_id": user_id, "reason": "user not found"})
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found",
             )
         if role != UserRole.ADMIN and user_to_delete.id != current_user_id:
             logger.warning(
-                {"event": "user_deletion_failed", "username": current_user_id, "reason": "permission denied"})
+                {"event": "user_deletion_failed", "user_id": current_user_id, "reason": "permission denied"})
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can't delete another user",
             )
         user = await self.user_repo.delete(user_to_delete)
-        logger.info({"event": "user_deletion_success", "username": user_id, "reason": role})
+        logger.info({"event": "user_deletion_success", "user_id": user_id, "reason": role})
         return user
