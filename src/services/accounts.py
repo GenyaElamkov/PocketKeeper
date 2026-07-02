@@ -59,7 +59,7 @@ class AccountService:
 
         if db_account.user_id != user_id:
             logger.warning(
-                {"event": "account_updation_failed", "username": user_id, "reason": "user not found"})
+                {"event": "account_updation_failed", "username": user_id, "reason": "permission denied"})
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can't update an account for another user",
@@ -94,7 +94,7 @@ class AccountService:
             )
         if db_account.user_id != user_id:
             logger.warning(
-                {"event": "account_deletion_failed", "username": user_id, "reason": "user not found"})
+                {"event": "account_deletion_failed", "username": user_id, "reason": "permission denied"})
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can't delete an account for another user",

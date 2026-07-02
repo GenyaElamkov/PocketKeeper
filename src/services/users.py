@@ -14,20 +14,24 @@ class UserService:
 
     async def get_user_by_id(self, current_user_id: int, user_id: int) -> User:
         """Получить пользователя по ID."""
+        logger.info({"event": "get_user_by_id_attempt", "username": user_id})
         if current_user_id != user_id:
-            logger.warning(f"You {current_user_id} can't access another user's data")
+            logger.warning(
+                {"event": "get_user_by_id_failed", "username": user_id, "reason": "permission denied"})
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can't access another user's data",
             )
         user = await self.user_repo.get_by_id(user_id)
         if user is None:
-            logger.warning(f"User with id {user_id} not found")
+            logger.warning(
+                {"event": "get_user_by_id_failed", "username": user_id, "reason": "user not found"})
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found",
             )
-        logger.info(f"User data accessed: {user_id} by {current_user_id}")
+        logger.info(
+            {"event": "get_user_by_id_success", "username": current_user_id})
         return user
 
     async def get_all_users(self, request: UserRequest) -> UserList:
@@ -58,7 +62,7 @@ class UserService:
         hashed_password = hash_password(user.password.get_secret_value())
         new_user = await self.user_repo.create(user.email, hashed_password, user.full_name)
 
-        logger.info({"event": "user_creation_success", "username": user.id})
+        logger.info({"event": "user_creation_success", "username": new_user.id})
         return new_user
 
     async def update_user(self, current_user_id: int, user: UserUpdate) -> User:
@@ -86,9 +90,8 @@ class UserService:
                 detail="User not found",
             )
         if role != UserRole.ADMIN and user_to_delete.id != current_user_id:
-            logger.warning(f"You {current_user_id} can't delete another user")
             logger.warning(
-                {"event": "user_deletion_failed", "username": current_user_id, "reason": "role or user dosn't match"})
+                {"event": "user_deletion_failed", "username": current_user_id, "reason": "permission denied"})
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can't delete another user",
