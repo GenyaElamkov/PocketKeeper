@@ -25,33 +25,41 @@ class AccountService:
 
     async def create_account(self, account: AccountCreate, user_id: int) -> Account:
         """Создать счет."""
+        logger.info({"event": "account_creation_attempt", "username": user_id})
+
         name_account = await self.account_repo.user_account_by_name_exists(
             name=account["name"],
             user_id=user_id,
         )
         if name_account:
-            logger.warning(f"Account {name_account} with this name already exists: {user_id}")
+            logger.warning(
+                {"event": "account_creation_failed", "username": user_id, "reason": "already exists"})
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Account with this name already exists",
             )
         account['balance'] = account["initial_balance"]
         new_account = await self.account_repo.create(account, user_id=user_id)
-        logger.info(f"Account registered: {new_account.id}")
+
+        logger.info({"event": "account_creation_success", "username": user_id})
         return new_account
 
     async def update_account(self, account_id: int, account: AccountUpdate, user_id: int) -> Account:
         """Обновить счет."""
+        logger.info({"event": "account_updation_attempt", "username": user_id})
+
         db_account = await self.account_repo.get_by_id(account_id)
         if not db_account:
-            logger.warning(f"Account with id {account_id} not found")
+            logger.warning(
+                {"event": "account_updation_failed", "username": user_id, "reason": "account not found"})
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Account not found",
             )
 
         if db_account.user_id != user_id:
-            logger.warning(f"You {user_id} can't update an account for another user")
+            logger.warning(
+                {"event": "account_updation_failed", "username": user_id, "reason": "user not found"})
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can't update an account for another user",
@@ -60,31 +68,38 @@ class AccountService:
         if 'initial_balance' in account and account['initial_balance'] != db_account.initial_balance:
             transactions = await self.transaction_repo.transaction_exists(account_id)
             if transactions:
-                logger.warning(f"Can't update: account {account_id} with transactions")
+                logger.warning(
+                    {"event": "account_updation_failed", "username": user_id, "reason": "account with transactions"})
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="You can't update an account with transactions",
                 )
             account['balance'] = account["initial_balance"]
         updated_account = await self.account_repo.update(account_id, account)
-        logger.info(f"Account updated: {updated_account.id}")
+
+        logger.info({"event": "account_creation_success", "username": user_id})
         return updated_account
 
     async def delete_account(self, account_id: int, user_id: int) -> Account:
         """Удалить счет."""
+        logger.info({"event": "account_deltion_attempt", "username": user_id, "account": account_id})
+
         db_account = await self.account_repo.get_by_id(account_id)
         if not db_account:
-            logger.warning(f"Account with id {account_id} not found")
+            logger.warning(
+                {"event": "account_deletion_failed", "username": user_id, "reason": "account not found"})
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Account not found",
             )
         if db_account.user_id != user_id:
-            logger.warning(f"User: {user_id} can't delete an account for another user")
+            logger.warning(
+                {"event": "account_deletion_failed", "username": user_id, "reason": "user not found"})
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can't delete an account for another user",
             )
         deleted_account = await self.account_repo.delete(db_account)
-        logger.info(f"Account deleted: {account_id}")
+
+        logger.info({"event": "account_deltion_success", "username": user_id, "reason": account_id})
         return deleted_account

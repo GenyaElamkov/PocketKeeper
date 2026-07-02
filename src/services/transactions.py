@@ -63,6 +63,7 @@ class TransactionService:
             user_id=user_id,
         )
         await self.transaction_repo.update_account_balance(transaction.account_id)
+        logger.info(f"Transaction created: {new_transaction.id}")
         return new_transaction
 
     async def update_transaction(
@@ -86,7 +87,9 @@ class TransactionService:
                 detail="You can't update a transaction for another user",
             )
         await self.transaction_repo.update(transaction_id, update_data.model_dump(exclude_unset=True))
+        logger.info(f"Transaction updated: {transaction_id}")
         await self.transaction_repo.update_account_balance(update_data.account_id)
+        logger.info(f"Account balance updated: {update_data.account_id}")
         return await self.transaction_repo.get_active_transaction_by_id(transaction_id)
 
     async def delete_transaction(self, transaction_id: int, user_id: int) -> Transaction:
@@ -100,11 +103,13 @@ class TransactionService:
             )
 
         if db_transaction.user_id != user_id:
-            logger.warning(f"You {user_id} can't delete a transaction for another user")
+            logger.warning(f"User: {user_id} can't delete a transaction for another user")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can't delete a transaction for another user",
             )
         await self.transaction_repo.delete(db_transaction)
+        logger.info(f"Transaction deleted: {transaction_id}")
         await self.transaction_repo.update_account_balance(db_transaction.account_id)
+        logger.info(f"Account balance updated: {db_transaction.account_id}")
         return db_transaction

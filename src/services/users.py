@@ -45,20 +45,25 @@ class UserService:
 
     async def create_user(self, user: UserCreate) -> User:
         """Создать пользователя."""
+        logger.info({"event": "user_creation_attempt", "username": user.email})
+
         user_existed = await self.user_repo.user_exists(user.email)
         if user_existed:
-            logger.warning(f"Regiestration failed for {user.email}: email alreade exists")
+            logger.warning(
+                {"event": "user_creation_failed", "username": user.email, "reason": "already exists"})
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="User with this email already exists",
             )
         hashed_password = hash_password(user.password.get_secret_value())
         new_user = await self.user_repo.create(user.email, hashed_password, user.full_name)
-        logger.info(f"User registered: {user.id}")
+
+        logger.info({"event": "user_creation_success", "username": user.id})
         return new_user
 
     async def update_user(self, current_user_id: int, user: UserUpdate) -> User:
         """Обновить пользователя."""
+        logger.info({"event": "user_updation_attempt", "username": current_user_id})
         hashed_password = hash_password(user.password.get_secret_value())
         update_user = await self.user_repo.update(
             user_id=current_user_id,
@@ -66,24 +71,28 @@ class UserService:
             password=hashed_password,
             full_name=user.full_name,
         )
-        logger.info(f"User updated: {current_user_id}")
+        logger.info({"event": "user_updation_success", "username": current_user_id})
         return update_user
 
     async def delete_user(self, user_id: int, current_user_id: int, role: str) -> User:
         """Удалить пользователя."""
+        logger.info({"event": "user_deletion_attempt", "username": user_id})
         user_to_delete = await self.user_repo.get_active_by_id(user_id)
         if user_to_delete is None:
-            logger.warning(f"User with id {user_id} not found")
+            logger.warning(
+                {"event": "user_delation_failed", "username": user_id, "reason": "user not found"})
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found",
             )
         if role != UserRole.ADMIN and user_to_delete.id != current_user_id:
             logger.warning(f"You {current_user_id} can't delete another user")
+            logger.warning(
+                {"event": "user_deletion_failed", "username": current_user_id, "reason": "role or user dosn't match"})
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can't delete another user",
             )
         user = await self.user_repo.delete(user_to_delete)
-        logger.info(f"User deleted: {user_id} role {role}")
+        logger.info({"event": "user_deletion_success", "username": user_id, "reason": role})
         return user
