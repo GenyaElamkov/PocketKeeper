@@ -1,54 +1,17 @@
-from contextlib import asynccontextmanager
-
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Request
 from loguru import logger
 
 from src.api.v1 import main_router
+from src.application.app_factory import create_app
 from src.core.config import settings
-from src.core.database import create_db_and_tables
-from src.infrastructure.infra_logging import log_requests_middleware
+from src.infrastructure.infra_rate_limiter import limiter
 
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    logger.info({"event": "Connecting to database..."})
-    try:
-        await create_db_and_tables()
-        logger.info({"event": "Database connected successfully"})
-    except Exception as e:
-        logger.error({"event": "Database connection failed", "error": str(e)})
-        raise
-    yield
-    logger.info({"event": "Disconnecting from database..."})
-
-
-app = FastAPI(
-    description="API для PocketKeeper",
-    lifespan=lifespan,
-)
-
-origins = [
-    "http://localhost:5173",
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    allow_credentials=True,
-)
-
-
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    """Логирование запросов."""
-    return await log_requests_middleware(request, call_next)
+app = create_app()
 
 
 @app.get("/", name="Главная страница", tags=["Главная"])
-async def root():
+@limiter.limit("10/minute")
+async def root(request: Request):
     """Главная страница. Список версий API."""
     logger.info("Запрос на главную страницу")
     return {

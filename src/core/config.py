@@ -46,9 +46,18 @@ class DatabaseConfig(BaseModel):
         return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
 
 
+class CorsConfig(BaseModel):
+    """Конфигурация CORS."""
+    allow_origins: list[str] = ["http://localhost:5173"]
+    allow_methods: list[str] = ["*"]
+    allow_headers: list[str] = ["*"]
+    allow_credentials: bool = True
+
+
 class Settings(BaseSettings):
     """Настройки приложения."""
     database: DatabaseConfig = DatabaseConfig()
+    cors: CorsConfig = CorsConfig()
     auth: AuthConfig = AuthConfig()
     api: ApiPrefix = ApiPrefix()
     log: LogConfig = LogConfig()

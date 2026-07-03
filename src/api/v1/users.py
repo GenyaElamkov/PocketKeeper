@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 
 from src.core.dependencies import (get_current_admin, get_current_user,
                                    get_user_service)
+from src.infrastructure.infra_rate_limiter import limiter
 from src.schemas.users import User, UserList, UserRequest, UserUpdate
 from src.services.users import UserService
 
@@ -13,19 +14,23 @@ router = APIRouter(
 
 @router.get("/", name="Список пользователей",
             response_model=UserList)
+@limiter.limit("10/minute")
 async def get_all_users(
-    request: UserRequest = Depends(),
+    request: Request,
+    user_request: UserRequest = Depends(),
     user_service: UserService = Depends(get_user_service),
     current_user: User = Depends(get_current_admin),
 ) -> UserList:
     """Получение списка пользователей, может только 'user' с ролью 'admin'."""
-    return await user_service.get_all_users(request)
+    return await user_service.get_all_users(user_request)
 
 
 @router.get("/me",
             name="Текущий пользователь",
             response_model=User)
+@limiter.limit("10/minute")
 async def get_current_user(
+    request: Request,
     current_user: User = Depends(get_current_user),
 ) -> User:
     """Получение текущего пользователя."""
@@ -36,7 +41,9 @@ async def get_current_user(
             name="Пользователь",
             response_model=User,
             deprecated=True)
+@limiter.limit("10/minute")
 async def get_user(
+    request: Request,
     user_id: int,
     user_service: UserService = Depends(get_user_service),
     current_user: User = Depends(get_current_user),
@@ -49,7 +56,9 @@ async def get_user(
             name="Обновить пользователя",
             response_model=User,
             deprecated=True)
+@limiter.limit("5/minute")
 async def update_user(
+    request: Request,
     user: UserUpdate,
     user_service: UserService = Depends(get_user_service),
     current_user: User = Depends(get_current_user),
@@ -62,7 +71,9 @@ async def update_user(
                name="Удалить пользователя",
                response_model=User,
                status_code=status.HTTP_200_OK)
+@limiter.limit("5/minute")
 async def delete_user(
+    request: Request,
     user_id: int,
     user_service: UserService = Depends(get_user_service),
     current_user: User = Depends(get_current_user),

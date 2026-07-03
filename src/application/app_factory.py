@@ -1,0 +1,51 @@
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from loguru import logger
+from slowapi.errors import RateLimitExceeded
+from slowapi.extension import _rate_limit_exceeded_handler
+
+from src.core.config import settings
+from src.core.database import create_db_and_tables
+from src.infrastructure.infra_logging import log_requests_middleware
+from src.infrastructure.infra_rate_limiter import limiter
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info({"event": "Connecting to database..."})
+    try:
+        await create_db_and_tables()
+        logger.info({"event": "Database connected successfully"})
+    except Exception as e:
+        logger.error({"event": "Database connection failed", "error": str(e)})
+        raise
+    yield
+    logger.info({"event": "Disconnecting from database..."})
+
+
+def create_app() -> FastAPI:
+    """Создает экземпляр FastAPI с настройками приложения."""
+    app = FastAPI(
+        description="API для PocketKeeper",
+        lifespan=lifespan,
+    )
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors.allow_origins,
+        allow_methods=settings.cors.allow_methods,
+        allow_headers=settings.cors.allow_headers,
+        allow_credentials=settings.cors.allow_credentials,
+    )
+
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+    @app.middleware("http")
+    async def log_requests(request: Request, call_next):
+        """Логирование запросов."""
+        return await log_requests_middleware(request, call_next)
+
+    return app

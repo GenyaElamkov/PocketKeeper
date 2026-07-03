@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from src.core.dependencies import get_auth_service, get_user_service
+from src.infrastructure.infra_rate_limiter import limiter
 from src.schemas.auth import RefreshTokenRequest
 from src.schemas.users import User, UserCreate
 from src.services.auth import AuthService
@@ -16,7 +17,9 @@ router = APIRouter(
 @router.post("/register", name="Создать пользователя",
              response_model=User,
              status_code=status.HTTP_201_CREATED)
+@limiter.limit("5/minute")
 async def create_user(
+    request: Request,
     user: UserCreate,
     user_service: UserService = Depends(get_user_service),
 ) -> User:
@@ -25,7 +28,9 @@ async def create_user(
 
 
 @router.post("/token", name="Аутентифицирует пользователя")
+@limiter.limit("5/minute")
 async def login(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     auth_service: AuthService = Depends(get_auth_service),
 ) -> dict:
@@ -37,7 +42,9 @@ async def login(
 
 
 @router.post("/refresh-token", name="Обновление токена")
+@limiter.limit("5/minute")
 async def refresh_token(
+    request: Request,
     refresh_request: RefreshTokenRequest,
     auth_service: AuthService = Depends(get_auth_service),
 ) -> dict:
@@ -47,7 +54,9 @@ async def refresh_token(
 
 
 @router.post("/refresh-access-token", name="Обновление access токена")
+@limiter.limit("5/minute")
 async def refresh_access_token(
+    request: Request,
     refresh_request: RefreshTokenRequest,
     auth_service: AuthService = Depends(get_auth_service),
 ) -> dict:
@@ -57,7 +66,9 @@ async def refresh_access_token(
 
 
 @router.post("/reset-password", name="Сброс пароля")
+@limiter.limit("5/minute")
 async def reset_password(
+    request: Request,
     reset_request: RefreshTokenRequest,
     auth_service: AuthService = Depends(get_auth_service),
 ) -> dict:

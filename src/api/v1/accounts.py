@@ -1,8 +1,9 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 
 from src.core.dependencies import get_account_service, get_current_member
+from src.infrastructure.infra_rate_limiter import limiter
 from src.schemas.accounts import Account, AccountCreate, AccountUpdate
 from src.schemas.users import User
 from src.services.accounts import AccountService
@@ -14,7 +15,9 @@ router = APIRouter(
 
 
 @router.get("/", name="Список счетов", response_model=List[Account])
+@limiter.limit("10/minute")
 async def get_all_accounts(
+    request: Request,
     account_service: AccountService = Depends(get_account_service),
     current_user: User = Depends(get_current_member),
 ) -> list[Account]:
@@ -25,7 +28,9 @@ async def get_all_accounts(
 @router.post("/", name="Создать счет",
              response_model=Account,
              status_code=status.HTTP_201_CREATED)
+@limiter.limit("5/minute")
 async def create_account(
+    request: Request,
     account: AccountCreate,
     account_service: AccountService = Depends(get_account_service),
     current_user: User = Depends(get_current_member),
@@ -34,7 +39,9 @@ async def create_account(
 
 
 @router.put("/{account_id}", name="Обновить счет", response_model=Account)
+@limiter.limit("5/minute")
 async def update_account(
+    request: Request,
     account_id: int,
     account: AccountUpdate,
     account_service: AccountService = Depends(get_account_service),
@@ -49,7 +56,9 @@ async def update_account(
         name="Удалить счет",
         response_model=Account,
         status_code=status.HTTP_200_OK)
+@limiter.limit("5/minute")
 async def delete_account(
+    request: Request,
     account_id: int,
     account_service: AccountService = Depends(get_account_service),
     current_user: User = Depends(get_current_member),
