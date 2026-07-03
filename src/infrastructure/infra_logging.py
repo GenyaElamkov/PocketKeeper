@@ -1,16 +1,18 @@
-from time import perf_counter, time
+from time import perf_counter
 
 from fastapi import Request
 from loguru import logger
 
 logger.remove()
 logger.add(
-    f"logs/file{time()}.log",
-    retention="10 days",
+    "logs/app_{time:YYYY-MM-DD}.log",
+    retention="30 days",
+    rotation="1 day",
     compression="zip",
-    format="{message}",
+    format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level} | {message}",
     serialize=True,
     level="INFO",
+    encoding="utf-8",
 )
 
 
