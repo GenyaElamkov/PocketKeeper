@@ -24,8 +24,8 @@ db-logs:
 	$(LOGS) -f $(DB_CONTAINER) -f
 
 db-connect:
-	@echo "Подключение к БД как $(POSTGRES_USER)..."
-	$(EXEC) $(DB_CONTAINER) psql -U $(POSTGRES_USER)
+	@echo "Подключение к БД как $(DB_USER)..."
+	$(EXEC) $(DB_CONTAINER) psql -U $(DB_USER)
 
 db-shell:
 	$(EXEC) $(DB_CONTAINER) sh

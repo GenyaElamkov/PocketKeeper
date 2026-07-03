@@ -12,11 +12,15 @@ from src.infrastructure.infra_logging import log_requests_middleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("Приложение запускается. Создаем базу данных...")
-    await create_db_and_tables()
-    print("База данных инициализирована.")
+    logger.info({"event": "Connecting to database..."})
+    try:
+        await create_db_and_tables()
+        logger.info({"event": "Database connected successfully"})
+    except Exception as e:
+        logger.error({"event": "Database connection failed", "error": str(e)})
+        raise
     yield
-    print("Приложение завершает работу.")
+    logger.info({"event": "Disconnecting from database..."})
 
 
 app = FastAPI(

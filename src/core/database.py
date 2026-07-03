@@ -2,9 +2,19 @@ from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker,
                                     create_async_engine)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-DATABASE_URL = "postgresql+asyncpg://pocketkeeper_user:23121984@localhost:5432/pocketkeeper_db"
+from src.core.config import settings
 
-async_engine = create_async_engine(DATABASE_URL, echo=True)
+DATABASE_URL = settings.database.url
+
+async_engine = create_async_engine(
+    DATABASE_URL,
+    pool_size=10,
+    max_overflow=20,
+    pool_timeout=30,
+    pool_recycle=3600,
+    pool_pre_ping=True,
+    echo=False,
+)
 
 async_session_maker = async_sessionmaker(
     async_engine,

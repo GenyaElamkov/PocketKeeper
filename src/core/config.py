@@ -20,10 +20,38 @@ class ApiPrefix(BaseModel):
     prefix: str = "/api/v1"
 
 
+class LogConfig(BaseModel):
+    """Конфигурация логирования."""
+    path: str = os.getenv("LOG_PATH", "logs")
+    name: str = os.getenv("LOG_NAME", "app_{time:YYYY-MM-DD}.log")
+    retention: str = os.getenv("LOG_RETENTION", "10 days")
+    rotation: str = os.getenv("LOG_ROTATION", "1 day")
+    level: str = os.getenv("LOG_LEVEL", "INFO")
+    compression: str = os.getenv("LOG_COMPRESSION", "zip")
+    log_format: str = os.getenv("MESSAGE_FORMAT", "{message}")
+    serialization: str = os.getenv("LOG_SERIALIZATION", True)
+
+
+class DatabaseConfig(BaseModel):
+    """Конфигурация базы данных."""
+    host: str = os.getenv("DB_HOST", "localhost")
+    port: str = os.getenv("DB_PORT", "5432")
+    user: str = os.getenv("DB_USER", "pocketkeeper_user")
+    password: str = os.getenv("DB_PASSWORD")
+    database: str = os.getenv("POSTGRES_DB", "pocketkeeper_db")
+
+    @property
+    def url(self) -> str:
+        """Возвращает URL для подключения к базе данных."""
+        return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
+
+
 class Settings(BaseSettings):
     """Настройки приложения."""
+    database: DatabaseConfig = DatabaseConfig()
     auth: AuthConfig = AuthConfig()
     api: ApiPrefix = ApiPrefix()
+    log: LogConfig = LogConfig()
 
 
 settings = Settings()

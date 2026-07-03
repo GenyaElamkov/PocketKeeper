@@ -3,16 +3,17 @@ from time import perf_counter
 from fastapi import Request
 from loguru import logger
 
+from src.core.config import settings
+
 logger.remove()
 logger.add(
-    "logs/app_{time:YYYY-MM-DD}.log",
-    retention="30 days",
-    rotation="1 day",
-    compression="zip",
-    format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level} | {message}",
-    serialize=True,
-    level="INFO",
-    encoding="utf-8",
+    f"{settings.log.path}/{settings.log.name}",
+    retention=settings.log.retention,
+    rotation=settings.log.rotation,
+    compression=settings.log.compression,
+    format=settings.log.log_format,
+    serialize=settings.log.serialization,
+    level=settings.log.level,
 )
 
 
