@@ -65,7 +65,7 @@ class UserService:
         logger.info({"event": "user_creation_success", "user_id": new_user.id})
         return new_user
 
-    async def update_user(self, current_user_id: int, user: UserUpdate) -> User:
+    async def update_user_profile(self, current_user_id: int, user: UserUpdate) -> User:
         """Обновить пользователя."""
         logger.info({"event": "user_updation_attempt", "user_id": current_user_id})
 

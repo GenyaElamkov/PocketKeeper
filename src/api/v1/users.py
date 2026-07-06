@@ -50,14 +50,14 @@ async def get_user(
 
 @router.patch("/me", name="Обновить профиль пользователя", response_model=User)
 @limiter.limit("5/minute")
-async def update_user(
+async def update_profile_user(
     request: Request,
     user: UserUpdate,
     user_service: UserService = Depends(get_user_service),
     current_user: User = Depends(get_current_user),
 ) -> User:
     """Обновление профиля пользователя."""
-    return await user_service.update_user(current_user_id=current_user.id, user=user)
+    return await user_service.update_user_profile(current_user_id=current_user.id, user=user)
 
 
 @router.patch("/change-password", name="Обновить пароль пользователя", response_model=User)
