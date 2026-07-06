@@ -32,8 +32,13 @@ class User(BaseModel):
 class UserUpdate(BaseModel):
     """Модель для обновления пользователя"""
     email: EmailStr | None = Field(None, description="Email для входа")
-    password: SecretStr | None = Field(None, min_length=8, description="Пароль (минимум 8 символов)")
     full_name: str | None = Field(None, max_length=254, description="Полное имя пользователя")
+
+
+class UserUpdatePassword(BaseModel):
+    """Обновление пароля пользователем."""
+    old_password: SecretStr = Field(..., min_length=8, description="Старый пароль (минимум 8 символов)")
+    password: SecretStr = Field(..., min_length=8, description="Пароль (минимум 8 символов)")
 
 
 class UserList(BaseModel):

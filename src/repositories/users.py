@@ -56,21 +56,27 @@ class UserRepository:
         await self.db.commit()
         return db_user
 
-    async def update(
-            self,
-            user_id: int,
-            email: str | None,
-            password: str | None,
-            full_name: str | None,
-    ) -> User:
+    async def update(self, user_id: int,
+                     email: str | None, full_name: str | None) -> User:
         """Обновить пользователя."""
         await self.db.execute(
             update(User)
             .where(User.id == user_id)
             .values(
                 email=email,
-                hashed_password=password,
                 full_name=full_name,
+            ),
+        )
+        await self.db.commit()
+        return await self.get_by_id(user_id)
+
+    async def update_password(self, user_id: int, password: str) -> User:
+        """Обновить пароль пользователя."""
+        await self.db.execute(
+            update(User)
+            .where(User.id == user_id)
+            .values(
+                hashed_password=password,
             ),
         )
         await self.db.commit()
