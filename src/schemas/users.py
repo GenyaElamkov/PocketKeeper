@@ -60,3 +60,8 @@ class UserUpdateRefreshToken(BaseModel):
     id: int = Field(..., description="Уникальный идентификатор пользователя")   # noqa
     email: EmailStr = Field(..., description="Email для входа")
     role: UserRole = Field(..., description="Роль")
+
+
+class UserEmail(BaseModel):
+    """Модель для запроса на сброс пароля"""
+    email: EmailStr = Field(..., description="Email для сброса пароля")

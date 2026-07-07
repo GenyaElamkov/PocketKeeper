@@ -13,6 +13,7 @@ class AuthConfig(BaseModel):
     secret_key: str = os.getenv("SECRET_KEY")
     access_token_expire_minutes: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
     refresh_token_expire_days: int = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS"))
+    reset_token_expire_minutes: int = int(os.getenv("RESET_TOKEN_EXPIRE_MINUTES"))
 
 
 class ApiPrefix(BaseModel):
@@ -54,12 +55,18 @@ class CorsConfig(BaseModel):
     allow_credentials: bool = True
 
 
+class FrontendConfig(BaseModel):
+    """Конфигурация фронтенда."""
+    url: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+
 class Settings(BaseSettings):
     """Настройки приложения."""
     database: DatabaseConfig = DatabaseConfig()
     cors: CorsConfig = CorsConfig()
     auth: AuthConfig = AuthConfig()
     api: ApiPrefix = ApiPrefix()
+    frontend: FrontendConfig = FrontendConfig()
     log: LogConfig = LogConfig()
 
 

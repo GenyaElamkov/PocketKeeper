@@ -3,8 +3,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from src.core.dependencies import get_auth_service, get_user_service
 from src.infrastructure.infra_rate_limiter import limiter
-from src.schemas.auth import RefreshTokenRequest
-from src.schemas.users import User, UserCreate
+from src.schemas.auth import RefreshTokenRequest, ResetPasswordRequest
+from src.schemas.users import User, UserCreate, UserEmail
 from src.services.auth import AuthService
 from src.services.users import UserService
 
@@ -65,11 +65,26 @@ async def refresh_access_token(
     return await auth_service.update_access_token(user)
 
 
+@router.post("/forgot-password", name="Забыли пароль")
+@limiter.limit("5/minute")
+async def forgot_password(
+    request: Request,
+    email_data: UserEmail,
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    """Забыли пароль."""
+    return await auth_service.forgot_password(email_data.email)
+
+
 @router.post("/reset-password", name="Сброс пароля")
 @limiter.limit("5/minute")
 async def reset_password(
     request: Request,
-    reset_request: RefreshTokenRequest,
+    data: ResetPasswordRequest,
     auth_service: AuthService = Depends(get_auth_service),
 ) -> dict:
-    """Сброс пароля. (Заглушка)"""
+    """Сброс пароля."""
+    return await auth_service.reset_password(
+        raw_token=data.token,
+        new_password=data.password.get_secret_value(),
+    )
