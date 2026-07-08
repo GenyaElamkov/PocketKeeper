@@ -60,6 +60,17 @@ class FrontendConfig(BaseModel):
     url: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 
+class EmailConfig(BaseModel):
+    """Конфигурация email."""
+    host: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
+    port: int = int(os.getenv("SMTP_PORT", 587))
+    username: str = os.getenv("SMTP_USERNAME")
+    password: str = os.getenv("SMTP_PASSWORD")
+    sender_email: str = os.getenv("SMTP_FROM_EMAIL")
+    sender_name: str = os.getenv("SMTP_FROM_NAME", "Finance API")
+    use_tls: bool = True
+
+
 class Settings(BaseSettings):
     """Настройки приложения."""
     database: DatabaseConfig = DatabaseConfig()
@@ -68,6 +79,7 @@ class Settings(BaseSettings):
     api: ApiPrefix = ApiPrefix()
     frontend: FrontendConfig = FrontendConfig()
     log: LogConfig = LogConfig()
+    email: EmailConfig = EmailConfig()
 
 
 settings = Settings()

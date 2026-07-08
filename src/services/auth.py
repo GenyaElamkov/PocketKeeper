@@ -3,6 +3,7 @@ from fastapi import HTTPException, status
 from loguru import logger
 
 from src.core.config import settings
+from src.infrastructure.infra_email import SMTPEmailService
 from src.repositories.users import UserRepository
 from src.schemas.users import User, UserRole, UserUpdateRefreshToken
 from src.services.utils import (create_access_token, create_refresh_token,
@@ -12,8 +13,13 @@ from src.services.utils import (create_access_token, create_refresh_token,
 
 class AuthService:
     """Сервис аутентификации."""
-    def __init__(self, user_repo: UserRepository):
+    def __init__(
+            self,
+            user_repo: UserRepository,
+            email_service: SMTPEmailService,
+    ) -> None:
         self.user_repo = user_repo
+        self.email_service = email_service
 
     async def get_current_user(self, token: str) -> User:
         """Получение текущего пользователя."""
@@ -230,11 +236,14 @@ class AuthService:
         logger.info(
             {"event": "forgot_password_success", "user_id": user.id},
         )
-        # TODO: Удалить reset_link для продакшена и отправлять письмо с инструкциями по сбросу пароля
-        # TODO: send_email(reset_link)
+        # Отправка письма с инструкциями по сбросу пароля
+        await self.email_service.send_email(
+            to_email=user.email,
+            subject="Инструкции по сбросу пароля",
+            html=reset_link,
+        )
         return {
             "message": "Инструкции отправлены на почту.",
-            "reset_link": reset_link,
         }
 
     async def reset_password(self, raw_token: str, new_password: str) -> dict:
