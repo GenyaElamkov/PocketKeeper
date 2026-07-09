@@ -115,13 +115,18 @@ async def login(
                 "model": ErrorResponse,
                 "content": {
                     "application/json": {
-                        "example": {"detail": "Неверный токен"},
+                        "example": {"detail": "Неверный токен или срок истёк"},
                     },
                 },
             },
             429: {
                 "description": "Слишком много запросов (ограничение 5 в минуту)",
                 "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "Too many requests. Please try again later."},
+                    },
+                },
             },
         },
 )
@@ -148,13 +153,18 @@ async def refresh_token(
                 "model": ErrorResponse,
                 "content": {
                     "application/json": {
-                        "example": {"detail": "Неверный токен"},
+                        "example": {"detail": "Неверный токен или срок истёк"},
                     },
                 },
             },
             429: {
                 "description": "Слишком много запросов (ограничение 5 в минуту)",
                 "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "Too many requests. Please try again later."},
+                    },
+                },
             },
         },
 )
@@ -179,6 +189,11 @@ async def refresh_access_token(
             429: {
                 "description": "Слишком много запросов (ограничение 5 в минуту)",
                 "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "Too many requests. Please try again later."},
+                    },
+                },
             },
         },
 )
@@ -204,17 +219,27 @@ async def forgot_password(
                 "model": ErrorResponse,
                 "content": {
                     "application/json": {
-                        "example": {"detail": "Неверный токен"},
+                        "example": {"detail": "Неверный токен или срок истёк"},
                     },
                 },
             },
             422: {
                 "description": "Ошибка валидации нового пароля",
                 "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "Password must be at least 8 characters"},
+                    },
+                },
             },
             429: {
                 "description": "Слишком много запросов (ограничение 5 в минуту)",
                 "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "Too many requests. Please try again later."},
+                    },
+                },
             },
         },
 )
