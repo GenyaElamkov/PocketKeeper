@@ -80,20 +80,37 @@ async def get_current_user(
     return current_user
 
 
-@router.get("/{user_id}", name="Пользователь",
-            response_model=User, deprecated=True)
-@limiter.limit("10/minute")
-async def get_user(
-    request: Request,
-    user_id: int,
-    user_service: UserService = Depends(get_user_service),
-    current_user: User = Depends(get_current_user),
-) -> User:
-    """Получение пользователя по ID."""
-    return await user_service.get_user_by_id(current_user_id=current_user.id, user_id=user_id)
-
-
-@router.patch("/me", name="Обновить профиль пользователя", response_model=User)
+@router.patch(
+        "/me",
+        name="Обновить профиль пользователя",
+        response_model=User,
+        summary="Обновить профиль текущего пользователя",
+        description="Позволяет изменить email и/или имя пользователя.",
+        response_description="Обновлённые данные пользователя",
+        responses={
+            401: {
+                "description": "Не авторизован",
+                "model": ErrorResponse,
+            },
+            409: {
+                "description": "Новый email уже занят другим пользователем",
+                "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "User with this email already exists"},
+                    },
+                },
+            },
+            422: {
+                "description": "Ошибка валидации данных",
+                "model": ErrorResponse,
+            },
+            429: {
+                "description": "Слишком много запросов (ограничение 5 в минуту)",
+                "model": ErrorResponse,
+            },
+        },
+)
 @limiter.limit("5/minute")
 async def update_profile_user(
     request: Request,
