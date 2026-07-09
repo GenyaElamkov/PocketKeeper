@@ -25,21 +25,31 @@ router = APIRouter(
         response_description="Данные созданного пользователя",
         responses={
             409: {
-                "description": "Пользователь с таким email уже существует",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "User with this email already exists"},
+                    "description": "Пользователь с таким email уже существует",
+                    "model": ErrorResponse,
+                    "content": {
+                        "application/json": {
+                            "example": {"detail": "User with this email already exists"},
+                        },
                     },
                 },
-            },
             422: {
-                "description": "Ошибка валидации входных данных (некорректный email или пароль)",
-                "model": ErrorResponse,
+                    "description": "Ошибка валидации входных данных (некорректный email или пароль)",
+                    "model": ErrorResponse,
+                    "content": {
+                        "application/json": {
+                            "example": {"detail": "Invalid email format or password too short"},
+                        },
+                    },
             },
             429: {
-                "description": "Слишком много запросов (ограничение 5 в минуту)",
-                "model": ErrorResponse,
+                    "description": "Слишком много запросов (ограничение 5 в минуту)",
+                    "model": ErrorResponse,
+                    "content": {
+                        "application/json": {
+                            "example": {"detail": "Too many requests. Please try again later."},
+                        },
+                    },
             },
         },
 )
@@ -72,6 +82,11 @@ async def create_user(
             429: {
                 "description": "Слишком много запросов (ограничение 5 в минуту)",
                 "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "Too many login attempts. Please try again later."},
+                    },
+                },
             },
         },
 )
