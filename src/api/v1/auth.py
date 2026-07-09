@@ -88,7 +88,28 @@ async def login(
     )
 
 
-@router.post("/refresh-token", name="Обновление токена")
+@router.post(
+        "/refresh-token",
+        name="Обновление токена",
+        summary="Обновление refresh-токена",
+        description="Принимает действующий refresh-токен и возвращает новый refresh-токен.",
+        response_description="Новый refresh-токен",
+        responses={
+            401: {
+                "description": "Невалидный или просроченный refresh-токен",
+                "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "Неверный токен"},
+                    },
+                },
+            },
+            429: {
+                "description": "Слишком много запросов (ограничение 5 в минуту)",
+                "model": ErrorResponse,
+            },
+        },
+)
 @limiter.limit("5/minute")
 async def refresh_token(
     request: Request,
