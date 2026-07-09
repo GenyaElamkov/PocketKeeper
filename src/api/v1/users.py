@@ -164,8 +164,38 @@ async def update_password_user(
     return await user_service.update_user_password(current_user_id=current_user.id, user_update_data=user_update_data)
 
 
-@router.delete("/{user_id}", name="Удалить пользователя",
-               response_model=User, status_code=status.HTTP_200_OK)
+@router.delete(
+        "/{user_id}",
+        name="Удалить пользователя",
+        response_model=User, status_code=status.HTTP_200_OK,
+        summary="Удалить пользователя (админ или сам пользователь)",
+        description="Удаляет (деактивирует) пользователя. "
+        "Админ может удалить любого, обычный пользователь – только себя.",
+        response_description="Данные удалённого (деактивированного) пользователя",
+        responses={
+            401: {
+                "description": "Не авторизован",
+                "model": ErrorResponse,
+            },
+            403: {
+                "description": "Нет прав на удаление другого пользователя (если не админ)",
+                "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "You can't delete another user"},
+                    },
+                },
+            },
+            404: {
+                "description": "Пользователь не найден",
+                "model": ErrorResponse,
+            },
+            429: {
+                "description": "Слишком много запросов (ограничение 5 в минуту)",
+                "model": ErrorResponse,
+            },
+        },
+)
 @limiter.limit("5/minute")
 async def delete_user(
     request: Request,
