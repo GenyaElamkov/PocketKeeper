@@ -121,7 +121,27 @@ async def refresh_token(
     return await auth_service.update_refresh_token(user)
 
 
-@router.post("/refresh-access-token", name="Обновление access токена")
+@router.post(
+        "/refresh-access-token",
+        name="Обновление access токена",
+        description="Принимает действующий refresh-токен и возвращает новый access-токен.",
+        response_description="Новый access-токен",
+        responses={
+            401: {
+                "description": "Невалидный или просроченный refresh-токен",
+                "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "Неверный токен"},
+                    },
+                },
+            },
+            429: {
+                "description": "Слишком много запросов (ограничение 5 в минуту)",
+                "model": ErrorResponse,
+            },
+        },
+)
 @limiter.limit("5/minute")
 async def refresh_access_token(
     request: Request,
