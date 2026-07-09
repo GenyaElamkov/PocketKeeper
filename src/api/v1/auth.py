@@ -4,6 +4,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from src.core.dependencies import get_auth_service, get_user_service
 from src.infrastructure.infra_rate_limiter import limiter
 from src.schemas.auth import RefreshTokenRequest, ResetPasswordRequest
+from src.schemas.error import ErrorResponse
 from src.schemas.users import User, UserCreate, UserEmail
 from src.services.auth import AuthService
 from src.services.users import UserService
@@ -14,9 +15,34 @@ router = APIRouter(
 )
 
 
-@router.post("/register", name="Создать пользователя",
-             response_model=User,
-             status_code=status.HTTP_201_CREATED)
+@router.post(
+        "/register",
+        name="Создать пользователя",
+        response_model=User,
+        status_code=status.HTTP_201_CREATED,
+        summary='Регистрация нового аккаунта',
+        description="Создаёт нового пользователя с указанными email, паролем и именем.",
+        response_description="Данные созданного пользователя",
+        responses={
+            409: {
+                "description": "Пользователь с таким email уже существует",
+                "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "User with this email already exists"},
+                    },
+                },
+            },
+            422: {
+                "description": "Ошибка валидации входных данных (некорректный email или пароль)",
+                "model": ErrorResponse,
+            },
+            429: {
+                "description": "Слишком много запросов (ограничение 5 в минуту)",
+                "model": ErrorResponse,
+            },
+        },
+)
 @limiter.limit("5/minute")
 async def create_user(
     request: Request,
@@ -27,7 +53,28 @@ async def create_user(
     return await user_service.create_user(user)
 
 
-@router.post("/token", name="Аутентифицирует пользователя")
+@router.post(
+        "/token",
+        name="Аутентифицирует пользователя",
+        summary="Вход в систему",
+        description="Аутентификация по email и паролю. Возвращает access и refresh токены.",
+        response_description="Токены доступа и обновления",
+        responses={
+            401: {
+                "description": "Неверный логин или пароль",
+                "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "Неверный логин или пароль"},
+                    },
+                },
+            },
+            429: {
+                "description": "Слишком много запросов (ограничение 5 в минуту)",
+                "model": ErrorResponse,
+            },
+        },
+)
 @limiter.limit("5/minute")
 async def login(
     request: Request,
