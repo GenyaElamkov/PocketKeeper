@@ -216,6 +216,11 @@ async def update_password_user(
             401: {
                 "description": "Не авторизован",
                 "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "Could not validate credentials"},
+                    },
+                },
             },
             403: {
                 "description": "Нет прав на удаление другого пользователя (если не админ)",
@@ -229,10 +234,20 @@ async def update_password_user(
             404: {
                 "description": "Пользователь не найден",
                 "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "User not found"},
+                    },
+                },
             },
             429: {
                 "description": "Слишком много запросов (ограничение 5 в минуту)",
                 "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "Too many requests. Please try again later."},
+                    },
+                },
             },
         },
 )
