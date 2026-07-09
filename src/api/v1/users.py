@@ -34,6 +34,11 @@ router = APIRouter(
             429: {
                 "description": "Слишком много запросов (ограничение 10 в минуту)",
                 "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "Too many requests. Please try again later."},
+                    },
+                },
             },
         },
 )
@@ -68,6 +73,11 @@ async def get_all_users(
             429: {
                 "description": "Слишком много запросов (ограничение 10 в минуту)",
                 "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "Too many requests. Please try again later."},
+                    },
+                },
             },
         },
 )
@@ -91,6 +101,11 @@ async def get_current_user(
             401: {
                 "description": "Не авторизован",
                 "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "Could not validate credentials"},
+                    },
+                },
             },
             409: {
                 "description": "Новый email уже занят другим пользователем",
@@ -104,10 +119,20 @@ async def get_current_user(
             422: {
                 "description": "Ошибка валидации данных",
                 "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "Invalid email format or name too long"},
+                    },
+                },
             },
             429: {
                 "description": "Слишком много запросов (ограничение 5 в минуту)",
                 "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "Too many requests. Please try again later."},
+                    },
+                },
             },
         },
 )
