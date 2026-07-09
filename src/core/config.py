@@ -20,11 +20,13 @@ class ApiPrefix(BaseSettings):
 
 class LogConfig(BaseSettings):
     """Конфигурация логирования."""
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
     path: str = "logs"
     name: str = "app_{time:YYYY-MM-DD}.log"
     retention: str = "30 days"
     rotation: str = "1 day"
-    level: str = "INFO"
+    level: str = Field(default="INFO", validation_alias="LOG_LEVEL")
     compression: str = "zip"
     log_format: str = "{message}"
     serialization: bool = True
@@ -44,7 +46,7 @@ class DatabaseConfig(BaseSettings):
     pool_timeout: int = 30
     pool_recycle: int = 3600
     pool_pre_ping: bool = True
-    echo: bool = False
+    echo: bool = Field(default=True, validation_alias="DB_ECHO")
 
     @property
     def url(self) -> str:
@@ -54,7 +56,9 @@ class DatabaseConfig(BaseSettings):
 
 class CorsConfig(BaseSettings):
     """Конфигурация CORS."""
-    allow_origins: list[str] = ["http://localhost:5173"]
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    allow_origins: list[str] = Field(default=["http://localhost:5173"], validation_alias="CORS_ALLOW_ORIGINS")
     allow_methods: list[str] = ["*"]
     allow_headers: list[str] = ["*"]
     allow_credentials: bool = True
@@ -92,7 +96,7 @@ class Settings(BaseSettings):
     """Настройки приложения."""
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    environment: str = "development"
+    environment: str = Field(default="development", validation_alias="ENVIRONMENT")
     server: ServerConfig = ServerConfig()
     database: DatabaseConfig = DatabaseConfig()
     cors: CorsConfig = CorsConfig()

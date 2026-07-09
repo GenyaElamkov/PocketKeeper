@@ -11,6 +11,7 @@ from src.core.config import settings
 from src.core.database import create_db_and_tables
 from src.infrastructure.infra_logging import log_requests_middleware
 from src.infrastructure.infra_rate_limiter import limiter
+from src.infrastructure.security_headers import SecurityHeadersMiddleware
 
 
 @asynccontextmanager
@@ -37,7 +38,6 @@ def create_app() -> FastAPI:
         redoc_url="/redoc" if settings.debug else None,
         openapi_url="/openapi.json" if settings.debug else None,
     )
-
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors.allow_origins,
@@ -45,6 +45,9 @@ def create_app() -> FastAPI:
         allow_headers=settings.cors.allow_headers,
         allow_credentials=settings.cors.allow_credentials,
     )
+    # Заголовки безопастности
+    app.add_middleware(SecurityHeadersMiddleware)
+
     # TODO: Включить на продакшене когда будет HTTPS
     app.add_middleware(GZipMiddleware)
     app.state.limiter = limiter
