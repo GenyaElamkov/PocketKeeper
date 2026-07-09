@@ -122,7 +122,37 @@ async def update_profile_user(
     return await user_service.update_user_profile(current_user_id=current_user.id, user=user)
 
 
-@router.patch("/change-password", name="Обновить пароль пользователя", response_model=User)
+@router.patch(
+        "/change-password",
+        name="Обновить пароль пользователя",
+        response_model=User,
+        summary="Сменить пароль",
+        description="Изменяет пароль текущего пользователя. Требуется указать старый пароль.",
+        response_description="Данные пользователя после смены пароля",
+        responses={
+            401: {
+                "description": "Не авторизован",
+                "model": ErrorResponse,
+            },
+            400: {
+                "description": "Старый пароль указан неверно",
+                "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "Old password is incorrect"},
+                    },
+                },
+            },
+            422: {
+                "description": "Ошибка валидации (например, новый пароль слишком короткий)",
+                "model": ErrorResponse,
+            },
+            429: {
+                "description": "Слишком много запросов (ограничение 5 в минуту)",
+                "model": ErrorResponse,
+            },
+        },
+)
 @limiter.limit("5/minute")
 async def update_password_user(
     request: Request,
