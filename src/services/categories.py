@@ -14,13 +14,7 @@ class CategoryService:
 
     async def get_categories_by_user(self, user_id: int) -> Sequence[Category]:
         """Получить все категории конкретного пользователя."""
-        db_categories = await self.category_repo.get_all_active_by_user_id(user_id)
-        if not db_categories:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Categories not found",
-            )
-        return db_categories
+        return await self.category_repo.get_all_active_by_user_id(user_id)
 
     async def create_category(self, category: CategoryCreate, user_id: int) -> Category:
         """Создать категорию."""

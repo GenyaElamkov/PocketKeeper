@@ -8,12 +8,12 @@ DATABASE_URL = settings.database.url
 
 async_engine = create_async_engine(
     DATABASE_URL,
-    pool_size=10,
-    max_overflow=20,
-    pool_timeout=30,
-    pool_recycle=3600,
-    pool_pre_ping=True,
-    echo=True,
+    pool_size=settings.database.pool_size,
+    max_overflow=settings.database.max_overflow,
+    pool_timeout=settings.database.pool_timeout,
+    pool_recycle=settings.database.pool_recycle,
+    pool_pre_ping=settings.database.pool_pre_ping,
+    echo=settings.database.echo,
 )
 
 async_session_maker = async_sessionmaker(

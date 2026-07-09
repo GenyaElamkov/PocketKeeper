@@ -1,45 +1,50 @@
-import os
-
-from dotenv import load_dotenv
-from pydantic import BaseModel
-from pydantic_settings import BaseSettings
-
-load_dotenv()
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class AuthConfig(BaseModel):
+class AuthConfig(BaseSettings):
     """Конфигурация аутентификации."""
-    algorithm: str = os.getenv("ALGORITHM")
-    secret_key: str = os.getenv("SECRET_KEY")
-    access_token_expire_minutes: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
-    refresh_token_expire_days: int = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS"))
-    reset_token_expire_minutes: int = int(os.getenv("RESET_TOKEN_EXPIRE_MINUTES"))
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    algorithm: str = "HS256"
+    secret_key: str = Field(validation_alias="SECRET_KEY")
+    access_token_expire_minutes: int = 30
+    refresh_token_expire_days: int = 7
+    reset_token_expire_minutes: int = 15
 
 
-class ApiPrefix(BaseModel):
+class ApiPrefix(BaseSettings):
     """Конфигурация префиксов."""
     prefix: str = "/api/v1"
 
 
-class LogConfig(BaseModel):
+class LogConfig(BaseSettings):
     """Конфигурация логирования."""
-    path: str = os.getenv("LOG_PATH", "logs")
-    name: str = os.getenv("LOG_NAME", "app_{time:YYYY-MM-DD}.log")
-    retention: str = os.getenv("LOG_RETENTION", "10 days")
-    rotation: str = os.getenv("LOG_ROTATION", "1 day")
-    level: str = os.getenv("LOG_LEVEL", "INFO")
-    compression: str = os.getenv("LOG_COMPRESSION", "zip")
-    log_format: str = os.getenv("MESSAGE_FORMAT", "{message}")
-    serialization: str = os.getenv("LOG_SERIALIZATION", True)
+    path: str = "logs"
+    name: str = "app_{time:YYYY-MM-DD}.log"
+    retention: str = "30 days"
+    rotation: str = "1 day"
+    level: str = "INFO"
+    compression: str = "zip"
+    log_format: str = "{message}"
+    serialization: bool = True
 
 
-class DatabaseConfig(BaseModel):
+class DatabaseConfig(BaseSettings):
     """Конфигурация базы данных."""
-    host: str = os.getenv("DB_HOST", "localhost")
-    port: str = os.getenv("DB_PORT", "5432")
-    user: str = os.getenv("DB_USER", "pocketkeeper_user")
-    password: str = os.getenv("DB_PASSWORD")
-    database: str = os.getenv("POSTGRES_DB", "pocketkeeper_db")
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    host: str = Field(default="localhost", validation_alias="DB_HOST")
+    port: str = Field(default="5432", validation_alias="DB_PORT")
+    user: str = Field(default="pocketkeeper_user", validation_alias="DB_USER")
+    password: str = Field(validation_alias="DB_PASSWORD")
+    database: str = Field(default="pocketkeeper_db", validation_alias="POSTGRES_DB")
+    pool_size: int = 10
+    max_overflow: int = 20
+    pool_timeout: int = 30
+    pool_recycle: int = 3600
+    pool_pre_ping: bool = True
+    echo: bool = False
 
     @property
     def url(self) -> str:
@@ -47,7 +52,7 @@ class DatabaseConfig(BaseModel):
         return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
 
 
-class CorsConfig(BaseModel):
+class CorsConfig(BaseSettings):
     """Конфигурация CORS."""
     allow_origins: list[str] = ["http://localhost:5173"]
     allow_methods: list[str] = ["*"]
@@ -55,24 +60,40 @@ class CorsConfig(BaseModel):
     allow_credentials: bool = True
 
 
-class FrontendConfig(BaseModel):
+class FrontendConfig(BaseSettings):
     """Конфигурация фронтенда."""
-    url: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    url: str = "http://localhost:5173"
 
 
-class EmailConfig(BaseModel):
+class EmailConfig(BaseSettings):
     """Конфигурация email."""
-    host: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
-    port: int = int(os.getenv("SMTP_PORT", 587))
-    username: str = os.getenv("SMTP_USERNAME")
-    password: str = os.getenv("SMTP_PASSWORD")
-    sender_email: str = os.getenv("SMTP_FROM_EMAIL")
-    sender_name: str = os.getenv("SMTP_FROM_NAME", "Finance API")
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    host: str = Field(default="smtp.gmail.com", validation_alias="SMTP_HOST")
+    port: int = Field(default=587, validation_alias="SMTP_PORT")
+    username: str = Field(validation_alias="SMTP_USERNAME")
+    password: str = Field(validation_alias="SMTP_PASSWORD")
+    sender_email: str = Field(validation_alias="SMTP_FROM_EMAIL")
+    sender_name: str = Field(default="Finance API", validation_alias="SMTP_FROM_NAME")
     use_tls: bool = True
+
+
+class ServerConfig(BaseSettings):
+    """Конфигурация сервера."""
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    host: str = Field(default="0.0.0.0", validation_alias="HOST")
+    port: int = Field(default=8000, validation_alias="PORT")
 
 
 class Settings(BaseSettings):
     """Настройки приложения."""
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    environment: str = "development"
+    server: ServerConfig = ServerConfig()
     database: DatabaseConfig = DatabaseConfig()
     cors: CorsConfig = CorsConfig()
     auth: AuthConfig = AuthConfig()
@@ -80,6 +101,10 @@ class Settings(BaseSettings):
     frontend: FrontendConfig = FrontendConfig()
     log: LogConfig = LogConfig()
     email: EmailConfig = EmailConfig()
+
+    @property
+    def debug(self) -> bool:
+        return self.environment != "production"
 
 
 settings = Settings()
