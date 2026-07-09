@@ -124,6 +124,7 @@ async def refresh_token(
 @router.post(
         "/refresh-access-token",
         name="Обновление access токена",
+        summary="Обновление access-токена",
         description="Принимает действующий refresh-токен и возвращает новый access-токен.",
         response_description="Новый access-токен",
         responses={
@@ -153,7 +154,18 @@ async def refresh_access_token(
     return await auth_service.update_access_token(user)
 
 
-@router.post("/forgot-password", name="Забыли пароль")
+@router.post(
+        "/forgot-password",
+        name="Забыли пароль",
+        description="Отправляет на указанный email ссылку для сброса пароля с токеном.",
+        response_description="Сообщение об успешной отправке",
+        responses={
+            429: {
+                "description": "Слишком много запросов (ограничение 5 в минуту)",
+                "model": ErrorResponse,
+            },
+        },
+)
 @limiter.limit("5/minute")
 async def forgot_password(
     request: Request,
