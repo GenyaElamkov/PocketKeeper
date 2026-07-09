@@ -158,6 +158,11 @@ async def update_profile_user(
             401: {
                 "description": "Не авторизован",
                 "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "Could not validate credentials"},
+                    },
+                },
             },
             400: {
                 "description": "Старый пароль указан неверно",
@@ -171,10 +176,20 @@ async def update_profile_user(
             422: {
                 "description": "Ошибка валидации (например, новый пароль слишком короткий)",
                 "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "Password must be at least 8 characters"},
+                    },
+                },
             },
             429: {
                 "description": "Слишком много запросов (ограничение 5 в минуту)",
                 "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "Too many requests. Please try again later."},
+                    },
+                },
             },
         },
 )
