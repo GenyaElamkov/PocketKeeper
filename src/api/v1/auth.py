@@ -157,6 +157,7 @@ async def refresh_access_token(
 @router.post(
         "/forgot-password",
         name="Забыли пароль",
+        summary="Запрос на сброс пароля",
         description="Отправляет на указанный email ссылку для сброса пароля с токеном.",
         response_description="Сообщение об успешной отправке",
         responses={
@@ -179,6 +180,7 @@ async def forgot_password(
 @router.post(
         "/reset-password",
         name="Сброс пароля",
+        summary="Сброс пароля по токену",
         description="Устанавливает новый пароль, используя токен из письма сброса.",
         response_description="Сообщение об успешном сбросе",
         responses={
