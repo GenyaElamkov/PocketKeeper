@@ -176,7 +176,31 @@ async def forgot_password(
     return await auth_service.forgot_password(email_data.email)
 
 
-@router.post("/reset-password", name="Сброс пароля")
+@router.post(
+        "/reset-password",
+        name="Сброс пароля",
+        description="Устанавливает новый пароль, используя токен из письма сброса.",
+        response_description="Сообщение об успешном сбросе",
+        responses={
+            401: {
+                "description": "Невалидный или просроченный reset-токен",
+                "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "Неверный токен"},
+                    },
+                },
+            },
+            422: {
+                "description": "Ошибка валидации нового пароля",
+                "model": ErrorResponse,
+            },
+            429: {
+                "description": "Слишком много запросов (ограничение 5 в минуту)",
+                "model": ErrorResponse,
+            },
+        },
+)
 @limiter.limit("5/minute")
 async def reset_password(
     request: Request,
