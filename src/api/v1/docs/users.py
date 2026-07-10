@@ -1,66 +1,34 @@
-from src.api.v1.docs.responses import CONFLICT, RATE_LIMIT, UNAUTHORIZED
-from src.schemas.error import ErrorResponse
+from src.api.v1.docs.responses import (bad_request_response, conflict_response,
+                                       forbidden_response, not_found_response,
+                                       too_many_requests_response,
+                                       unauthorized_response)
 
 GET_ALL_USERS_RESPONSES = {
-    **RATE_LIMIT,
-    403: {
-        "description": "Недостаточно прав (требуется роль admin)",
-        "model": ErrorResponse,
-        "content": {
-            "application/json": {
-                "example": {"detail": "You don't have enough permissions"},
-            },
-        },
-    },
+    **unauthorized_response(),
+    **forbidden_response("You do not have sufficient permissions.The 'admin' role is required."),
+    **too_many_requests_response(),
 }
-
 
 GET_CURRENT_USER_RESPONSES = {
-    **UNAUTHORIZED,
-    **RATE_LIMIT,
+    **unauthorized_response(),
+    **too_many_requests_response(),
 }
 
-
 UPDATE_PROFILE_USER_RESPONSE = {
-    **UNAUTHORIZED,
-    **CONFLICT,
-    **RATE_LIMIT,
+    **unauthorized_response(),
+    **conflict_response("User with this email already exists"),
+    **too_many_requests_response(),
 }
 
 UPDATE_PASSWORD_USER_RESPONSES = {
-    **UNAUTHORIZED,
-    **RATE_LIMIT,
-    400: {
-        "description": "Старый пароль указан неверно",
-        "model": ErrorResponse,
-        "content": {
-            "application/json": {
-                "example": {"detail": "Old password is incorrect"},
-            },
-        },
-    },
+    **unauthorized_response(),
+    **too_many_requests_response(),
+    **bad_request_response("Old password is incorrect"),
 }
 
-
 DELETE_USER_RESPONSES = {
-    **UNAUTHORIZED,
-    **RATE_LIMIT,
-    403: {
-        "description": "Нет прав на удаление другого пользователя (если не админ)",
-        "model": ErrorResponse,
-        "content": {
-            "application/json": {
-                "example": {"detail": "You can't delete another user"},
-            },
-        },
-    },
-    404: {
-        "description": "Пользователь не найден",
-        "model": ErrorResponse,
-        "content": {
-            "application/json": {
-                "example": {"detail": "User not found"},
-            },
-        },
-    },
+    **unauthorized_response(),
+    **forbidden_response("You can't delete another user"),
+    **too_many_requests_response(),
+    **not_found_response("User"),
 }
