@@ -1,10 +1,10 @@
 from fastapi import HTTPException, status
 from loguru import logger
 
+from src.core.security.password import hash_password, verify_password
 from src.repositories.users import UserRepository
 from src.schemas.users import (User, UserCreate, UserList, UserRequest,
                                UserRole, UserUpdate, UserUpdatePassword)
-from src.services.utils import hash_password, verify_password
 
 
 class UserService:

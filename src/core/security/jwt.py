@@ -1,21 +1,8 @@
 from datetime import datetime, timedelta, timezone
 
 import jwt
-from passlib.context import CryptContext
 
 from src.core.config import settings
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
-def hash_password(password: str) -> str:
-    """Хеширование пароля."""
-    return pwd_context.hash(password)
-
-
-def verify_password(plane_password: str, hashed_password: str) -> bool:
-    """Проверка пароля."""
-    return pwd_context.verify(plane_password, hashed_password)
 
 
 def create_access_token(data: dict) -> str:

@@ -4,7 +4,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import async_session_maker
-from src.core.security import oauth2_scheme
+from src.core.security.oauth import oauth2_scheme
 from src.infrastructure.infra_email import SMTPEmailService
 from src.repositories.accounts import AccountRepository
 from src.repositories.analytics import AnalyticRepository

@@ -3,12 +3,12 @@ from fastapi import HTTPException, status
 from loguru import logger
 
 from src.core.config import settings
+from src.core.security.jwt import (create_access_token, create_refresh_token,
+                                   create_reset_token)
+from src.core.security.password import hash_password, verify_password
 from src.infrastructure.infra_email import SMTPEmailService
 from src.repositories.users import UserRepository
 from src.schemas.users import User, UserRole, UserUpdateRefreshToken
-from src.services.utils import (create_access_token, create_refresh_token,
-                                create_reset_token, hash_password,
-                                verify_password)
 
 
 class AuthService:
