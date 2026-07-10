@@ -1,10 +1,14 @@
 from fastapi import APIRouter, Depends, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 
+from src.api.v1.docs.auth import (CREATE_USER_RESPONSES,
+                                  FORGOT_PASSWORD_RESPONSES, LOGIN_RESPONSES,
+                                  REFRESH_ACCESS_TOKEN_RESPONSES,
+                                  REFRESH_TOKEN_RESPONSES,
+                                  RESET_PASSWORD_RESPONSES)
 from src.core.dependencies import get_auth_service, get_user_service
 from src.infrastructure.infra_rate_limiter import limiter
 from src.schemas.auth import RefreshTokenRequest, ResetPasswordRequest
-from src.schemas.error import ErrorResponse
 from src.schemas.users import User, UserCreate, UserEmail
 from src.services.auth import AuthService
 from src.services.users import UserService
@@ -23,35 +27,7 @@ router = APIRouter(
         summary='Регистрация нового аккаунта',
         description="Создаёт нового пользователя с указанными email, паролем и именем.",
         response_description="Данные созданного пользователя",
-        responses={
-            409: {
-                    "description": "Пользователь с таким email уже существует",
-                    "model": ErrorResponse,
-                    "content": {
-                        "application/json": {
-                            "example": {"detail": "User with this email already exists"},
-                        },
-                    },
-                },
-            422: {
-                    "description": "Ошибка валидации входных данных (некорректный email или пароль)",
-                    "model": ErrorResponse,
-                    "content": {
-                        "application/json": {
-                            "example": {"detail": "Invalid email format or password too short"},
-                        },
-                    },
-            },
-            429: {
-                    "description": "Слишком много запросов (ограничение 5 в минуту)",
-                    "model": ErrorResponse,
-                    "content": {
-                        "application/json": {
-                            "example": {"detail": "Too many requests. Please try again later."},
-                        },
-                    },
-            },
-        },
+        responses=CREATE_USER_RESPONSES,
 )
 @limiter.limit("5/minute")
 async def create_user(
@@ -69,26 +45,7 @@ async def create_user(
         summary="Вход в систему",
         description="Аутентификация по email и паролю. Возвращает access и refresh токены.",
         response_description="Токены доступа и обновления",
-        responses={
-            401: {
-                "description": "Неверный логин или пароль",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "Неверный логин или пароль"},
-                    },
-                },
-            },
-            429: {
-                "description": "Слишком много запросов (ограничение 5 в минуту)",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "Too many login attempts. Please try again later."},
-                    },
-                },
-            },
-        },
+        responses=LOGIN_RESPONSES,
 )
 @limiter.limit("5/minute")
 async def login(
@@ -109,26 +66,7 @@ async def login(
         summary="Обновление refresh-токена",
         description="Принимает действующий refresh-токен и возвращает новый refresh-токен.",
         response_description="Новый refresh-токен",
-        responses={
-            401: {
-                "description": "Невалидный или просроченный refresh-токен",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "Неверный токен или срок истёк"},
-                    },
-                },
-            },
-            429: {
-                "description": "Слишком много запросов (ограничение 5 в минуту)",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "Too many requests. Please try again later."},
-                    },
-                },
-            },
-        },
+        responses=REFRESH_TOKEN_RESPONSES,
 )
 @limiter.limit("5/minute")
 async def refresh_token(
@@ -147,26 +85,7 @@ async def refresh_token(
         summary="Обновление access-токена",
         description="Принимает действующий refresh-токен и возвращает новый access-токен.",
         response_description="Новый access-токен",
-        responses={
-            401: {
-                "description": "Невалидный или просроченный refresh-токен",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "Неверный токен или срок истёк"},
-                    },
-                },
-            },
-            429: {
-                "description": "Слишком много запросов (ограничение 5 в минуту)",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "Too many requests. Please try again later."},
-                    },
-                },
-            },
-        },
+        responses=REFRESH_ACCESS_TOKEN_RESPONSES,
 )
 @limiter.limit("5/minute")
 async def refresh_access_token(
@@ -185,17 +104,7 @@ async def refresh_access_token(
         summary="Запрос на сброс пароля",
         description="Отправляет на указанный email ссылку для сброса пароля с токеном.",
         response_description="Сообщение об успешной отправке",
-        responses={
-            429: {
-                "description": "Слишком много запросов (ограничение 5 в минуту)",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "Too many requests. Please try again later."},
-                    },
-                },
-            },
-        },
+        responses=FORGOT_PASSWORD_RESPONSES,
 )
 @limiter.limit("5/minute")
 async def forgot_password(
@@ -213,35 +122,7 @@ async def forgot_password(
         summary="Сброс пароля по токену",
         description="Устанавливает новый пароль, используя токен из письма сброса.",
         response_description="Сообщение об успешном сбросе",
-        responses={
-            401: {
-                "description": "Невалидный или просроченный reset-токен",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "Неверный токен или срок истёк"},
-                    },
-                },
-            },
-            422: {
-                "description": "Ошибка валидации нового пароля",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "Password must be at least 8 characters"},
-                    },
-                },
-            },
-            429: {
-                "description": "Слишком много запросов (ограничение 5 в минуту)",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "Too many requests. Please try again later."},
-                    },
-                },
-            },
-        },
+        responses=RESET_PASSWORD_RESPONSES,
 )
 @limiter.limit("5/minute")
 async def reset_password(

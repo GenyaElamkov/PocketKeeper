@@ -1,4 +1,4 @@
-from src.api.v1.docs.responses import RATE_LIMIT, UNAUTHORIZED
+from src.api.v1.docs.responses import CONFLICT, RATE_LIMIT, UNAUTHORIZED
 from src.schemas.error import ErrorResponse
 
 GET_ALL_USERS_RESPONSES = {
@@ -23,16 +23,8 @@ GET_CURRENT_USER_RESPONSES = {
 
 UPDATE_PROFILE_USER_RESPONSE = {
     **UNAUTHORIZED,
+    **CONFLICT,
     **RATE_LIMIT,
-    409: {
-        "description": "Новый email уже занят другим пользователем",
-        "model": ErrorResponse,
-        "content": {
-            "application/json": {
-                "example": {"detail": "User with this email already exists"},
-            },
-        },
-    },
 }
 
 UPDATE_PASSWORD_USER_RESPONSES = {
