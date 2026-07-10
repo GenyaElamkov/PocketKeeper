@@ -1,9 +1,13 @@
 from fastapi import APIRouter, Depends, Request, status
 
+from src.api.v1.docs.users import (DELETE_USER_RESPONSES,
+                                   GET_ALL_USERS_RESPONSES,
+                                   GET_CURRENT_USER_RESPONSES,
+                                   UPDATE_PASSWORD_USER_RESPONSES,
+                                   UPDATE_PROFILE_USER_RESPONSE)
 from src.core.dependencies import (get_current_admin, get_current_user,
                                    get_user_service)
 from src.infrastructure.infra_rate_limiter import limiter
-from src.schemas.error import ErrorResponse
 from src.schemas.users import (User, UserList, UserRequest, UserUpdate,
                                UserUpdatePassword)
 from src.services.users import UserService
@@ -21,26 +25,7 @@ router = APIRouter(
         summary="Получить список всех пользователей (только админ)",
         description="Возвращает список пользователей с пагинацией. Доступно только для пользователей с ролью `admin`.",
         response_description="Список пользователей и общее количество",
-        responses={
-            403: {
-                "description": "Недостаточно прав (требуется роль admin)",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "You don't have enough permissions"},
-                    },
-                },
-            },
-            429: {
-                "description": "Слишком много запросов (ограничение 10 в минуту)",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "Too many requests. Please try again later."},
-                    },
-                },
-            },
-        },
+        responses=GET_ALL_USERS_RESPONSES,
 )
 @limiter.limit("10/minute")
 async def get_all_users(
@@ -60,26 +45,7 @@ async def get_all_users(
         summary="Получить профиль текущего пользователя",
         description="Возвращает данные авторизованного пользователя.",
         response_description="Данные пользователя",
-        responses={
-            401: {
-                "description": "Не авторизован (отсутствует или невалидный токен)",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "Could not validate credentials"},
-                    },
-                },
-            },
-            429: {
-                "description": "Слишком много запросов (ограничение 10 в минуту)",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "Too many requests. Please try again later."},
-                    },
-                },
-            },
-        },
+        responses=GET_CURRENT_USER_RESPONSES,
 )
 @limiter.limit("10/minute")
 async def get_current_user(
@@ -97,44 +63,7 @@ async def get_current_user(
         summary="Обновить профиль текущего пользователя",
         description="Позволяет изменить email и/или имя пользователя.",
         response_description="Обновлённые данные пользователя",
-        responses={
-            401: {
-                "description": "Не авторизован",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "Could not validate credentials"},
-                    },
-                },
-            },
-            409: {
-                "description": "Новый email уже занят другим пользователем",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "User with this email already exists"},
-                    },
-                },
-            },
-            422: {
-                "description": "Ошибка валидации данных",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "Invalid email format or name too long"},
-                    },
-                },
-            },
-            429: {
-                "description": "Слишком много запросов (ограничение 5 в минуту)",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "Too many requests. Please try again later."},
-                    },
-                },
-            },
-        },
+        responses=UPDATE_PROFILE_USER_RESPONSE,
 )
 @limiter.limit("5/minute")
 async def update_profile_user(
@@ -154,44 +83,7 @@ async def update_profile_user(
         summary="Сменить пароль",
         description="Изменяет пароль текущего пользователя. Требуется указать старый пароль.",
         response_description="Данные пользователя после смены пароля",
-        responses={
-            401: {
-                "description": "Не авторизован",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "Could not validate credentials"},
-                    },
-                },
-            },
-            400: {
-                "description": "Старый пароль указан неверно",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "Old password is incorrect"},
-                    },
-                },
-            },
-            422: {
-                "description": "Ошибка валидации (например, новый пароль слишком короткий)",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "Password must be at least 8 characters"},
-                    },
-                },
-            },
-            429: {
-                "description": "Слишком много запросов (ограничение 5 в минуту)",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "Too many requests. Please try again later."},
-                    },
-                },
-            },
-        },
+        responses=UPDATE_PASSWORD_USER_RESPONSES,
 )
 @limiter.limit("5/minute")
 async def update_password_user(
@@ -212,44 +104,7 @@ async def update_password_user(
         description="Удаляет (деактивирует) пользователя. "
         "Админ может удалить любого, обычный пользователь – только себя.",
         response_description="Данные удалённого (деактивированного) пользователя",
-        responses={
-            401: {
-                "description": "Не авторизован",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "Could not validate credentials"},
-                    },
-                },
-            },
-            403: {
-                "description": "Нет прав на удаление другого пользователя (если не админ)",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "You can't delete another user"},
-                    },
-                },
-            },
-            404: {
-                "description": "Пользователь не найден",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "User not found"},
-                    },
-                },
-            },
-            429: {
-                "description": "Слишком много запросов (ограничение 5 в минуту)",
-                "model": ErrorResponse,
-                "content": {
-                    "application/json": {
-                        "example": {"detail": "Too many requests. Please try again later."},
-                    },
-                },
-            },
-        },
+        responses=DELETE_USER_RESPONSES,
 )
 @limiter.limit("5/minute")
 async def delete_user(
