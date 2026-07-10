@@ -1,5 +1,9 @@
 from fastapi import APIRouter, Depends, Request, status
 
+from src.api.v1.docs.transactions import (CREATE_TRANSACTION_RESPONSES,
+                                          DELETE_TRANSACTION_RESPONSES,
+                                          GET_ALL_TRANSACTIONS_RESPONSES,
+                                          UPDATE_TRANSACTIONS_RESPONSES)
 from src.core.dependencies import get_current_member, get_transaction_service
 from src.infrastructure.infra_rate_limiter import limiter
 from src.schemas.transactions import (Transaction, TransactionCreate,
@@ -14,8 +18,24 @@ router = APIRouter(
 )
 
 
-@router.get("/", name="Список транзакций",
-            response_model=TransactionList)
+@router.get(
+        "/",
+        name="Список транзакций",
+        response_model=TransactionList,
+        summary="Получить список транзакций с фильтрацией и пагинацией",
+        description="""
+        Возвращает список транзакций текущего пользователя с поддержкой:
+
+        - **Пагинация**: `page` (по умолчанию 1), `page_size` (по умолчанию 20)
+        - **Фильтрация по дате**: `date_from`, `date_to` (ISO-формат)
+        - **Фильтрация по категории**: `category_id`
+        - **Фильтрация по счёту**: `account_id`
+        - **Фильтрация по типу**: `transaction_type` (`income` / `expense` / `transfer`)
+        - **Сортировка по дате**: `date_sort` (`asc` / `desc`, по умолчанию `desc`)
+        """,
+        response_description="Список транзакций с пагинацией и общим количеством",
+        responses=GET_ALL_TRANSACTIONS_RESPONSES,
+)
 @limiter.limit("10/minute")
 async def get_all_transactions(
     request: Request,
@@ -27,9 +47,22 @@ async def get_all_transactions(
     return await transaction_service.get_all(transaction_request, current_user.id)
 
 
-@router.post("/", name="Создать транзакцию",
-             response_model=Transaction,
-             status_code=status.HTTP_201_CREATED)
+@router.post(
+        "/",
+        name="Создать транзакцию",
+        response_model=Transaction,
+        status_code=status.HTTP_201_CREATED,
+        summary="Создать новую транзакцию",
+        description="""
+        Создаёт новую транзакцию (доход, расход или перевод).
+
+        - **Для дохода/расхода**: указывается `account_id`, `category_id`, сумма, дата, описание.
+
+        Баланс счёта автоматически обновляется.
+        """,
+        response_description="Данные созданной транзакции",
+        responses=CREATE_TRANSACTION_RESPONSES,
+)
 @limiter.limit("5/minute")
 async def create_transaction(
     request: Request,
@@ -41,7 +74,20 @@ async def create_transaction(
     return await transaction_service.create_transaction(transaction, current_user.id)
 
 
-@router.put("/{transaction_id}", name="Обновить транзакцию", response_model=Transaction)
+@router.put(
+        "/{transaction_id}",
+        name="Обновить транзакцию",
+        response_model=Transaction,
+        summary="Обновить существующую транзакцию",
+        description="""
+        Изменяет параметры транзакции: сумму, категорию, счёт, дату, описание.
+
+        При изменении счёта или суммы баланс автоматически пересчитывается для обоих счетов
+        (если меняется счёт, то старый и новый счета пересчитываются).
+        """,
+        response_description="Обновлённые данные транзакции",
+        responses=UPDATE_TRANSACTIONS_RESPONSES,
+)
 @limiter.limit("5/minute")
 async def update_transaction(
     request: Request,
@@ -54,10 +100,19 @@ async def update_transaction(
     return await transaction_service.update_transaction(transaction_id, update_data, current_user.id)
 
 
-@router.delete("/{transaction_id}",
-               name="Удалить транзакцию",
-               response_model=Transaction,
-               status_code=status.HTTP_200_OK)
+@router.delete(
+        "/{transaction_id}",
+        name="Удалить транзакцию",
+        response_model=Transaction,
+        status_code=status.HTTP_200_OK,
+        summary="Удалить транзакцию (возврат баланса)",
+        description="""
+        Удаляет транзакцию и автоматически возвращает баланс счёта в исходное состояние.
+        После удаления транзакция помечается как неактивная (soft delete).
+        """,
+        response_description="Данные удалённой транзакции",
+        responses=DELETE_TRANSACTION_RESPONSES,
+)
 @limiter.limit("5/minute")
 async def delete_transaction(
     request: Request,
