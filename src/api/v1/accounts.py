@@ -26,7 +26,6 @@ router = APIRouter(
         description='Возвращает все активные счета, принадлежащие авторизованному пользователю.',
         response_description='Список счетов пользователя',
         responses=GET_ALL_ACCOUNTS_RESPONSES,
-
 )
 @limiter.limit("10/minute")
 async def get_all_accounts(
