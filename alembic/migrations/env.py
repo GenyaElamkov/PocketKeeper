@@ -9,6 +9,7 @@ from alembic import context
 
 from src.models import *
 from src.core.database import Base
+from src.core.config import settings
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -18,6 +19,11 @@ config = context.config
 # This line sets up loggers basically.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
+
+# Берём URL БД из настроек приложения (переменные окружения), а не из
+# статического значения в alembic.ini. Это важно для Docker: там хост БД —
+# имя сервиса (например "db"), а не "localhost", и он приходит через .env.
+config.set_main_option("sqlalchemy.url", settings.database.url)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
