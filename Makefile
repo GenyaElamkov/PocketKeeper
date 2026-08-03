@@ -6,9 +6,9 @@ EXEC = docker exec -it
 LOGS = docker logs
 ENV = --env-file .env
 
+# TODO: Удалить - это лишнее
 .PHONY: start db-start db-down db-logs db-connect db-shell
 
-# TODO: Удалить - это лишнее
 run:
 	uv run uvicorn src.main:app --reload --host $(HOST) --port $(PORT)
 
