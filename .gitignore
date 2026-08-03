@@ -39,3 +39,5 @@ htmlcov/
 
 # Database dump
 data.sql
+
+.gigacode/
