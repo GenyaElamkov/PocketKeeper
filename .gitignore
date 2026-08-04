@@ -20,7 +20,7 @@ dist/
 .DS_Store
 
 # Logs
-logs/
+# logs/
 *.log
 
 # Coverage
