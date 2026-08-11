@@ -5,9 +5,11 @@ from loguru import logger
 
 from src.core.config import settings
 
+settings.log.log_path.mkdir(parents=True, exist_ok=True)
+
 logger.remove()
 logger.add(
-    f"{settings.log.path}/{settings.log.name}",
+    str(settings.log.full_log_path),
     retention=settings.log.retention,
     rotation=settings.log.rotation,
     compression=settings.log.compression,

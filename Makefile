@@ -6,26 +6,19 @@ EXEC = docker exec -it
 LOGS = docker logs
 ENV = --env-file .env
 
-.PHONY: start db-start db-down db-logs db-connect db-shell
 
-# подключение app
-start:
-	uv run uvicorn src.main:app --reload --host $(HOST) --port $(PORT)
+.PHONY: dev-up dev-down dev-logs dev-migrate prod-up prod-down prod-logs prod-migrate
 
-db-start:
-	@echo "Создание контейнера $(DB_CONTAINER)..."
-	$(DC) -f $(STORAGES_FILE) $(ENV) up -d --build
+# --- Разработка (hot-reload, код монтируется с хоста) ---
+dev-up:
+	$(DC) -f docker-compose.dev.yml $(ENV) up -d --build
 
-db-down:
-	@echo "Отключение контейнера $(DB_CONTAINER)..."
-	$(DC) -f $(STORAGES_FILE) $(ENV) down
+dev-down:
+	$(DC) -f docker-compose.dev.yml $(ENV) down
 
-db-logs:
-	$(LOGS) -f $(DB_CONTAINER) -f
+dev-logs:
+	$(DC) -f docker-compose.dev.yml logs -f app
 
-db-connect:
-	@echo "Подключение к БД как $(DB_USER)..."
-	$(EXEC) $(DB_CONTAINER) psql -U $(DB_USER)
+dev-migrate:
+	$(DC) -f docker-compose.dev.yml $(ENV) run --rm migrate
 
-db-shell:
-	$(EXEC) $(DB_CONTAINER) sh

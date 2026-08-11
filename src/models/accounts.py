@@ -1,17 +1,23 @@
 from decimal import Decimal
 from typing import Optional
+from uuid import UUID
 
 from sqlalchemy import BOOLEAN, DECIMAL, ForeignKey, String
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.core.database import Base
+from src.core.database import IntBase
 from src.models.common import TimeBase as TimeBaseMixin
 
 
-class Account(Base, TimeBaseMixin):
+class Account(IntBase, TimeBaseMixin):
     __tablename__ = "accounts"
 
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    user_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     account_type: Mapped[str] = mapped_column(String(20), nullable=False)
     currency: Mapped[str] = mapped_column(String(3), nullable=False)

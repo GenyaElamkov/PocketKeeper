@@ -54,7 +54,10 @@ async def create_account(
     account_service: AccountService = Depends(get_account_service),
     current_user: User = Depends(get_current_member),
 ) -> Account:
-    return await account_service.create_account(account.model_dump(), current_user.id)
+    return await account_service.create_account(
+        account=account.model_dump(),
+        user_id=current_user.id,
+    )
 
 
 @router.put(
@@ -76,7 +79,11 @@ async def update_account(
     current_user: User = Depends(get_current_member),
 ) -> Account:
     """Обновление счета."""
-    return await account_service.update_account(account_id, account.model_dump(), current_user.id)
+    return await account_service.update_account(
+        account_id=account_id,
+        account=account.model_dump(),
+        user_id=current_user.id,
+    )
 
 
 @router.delete(
@@ -97,4 +104,7 @@ async def delete_account(
     current_user: User = Depends(get_current_member),
 ) -> Account:
     """Удаление счета."""
-    return await account_service.delete_account(account_id, current_user.id)
+    return await account_service.delete_account(
+        account_id=account_id,
+        user_id=current_user.id,
+    )

@@ -1,13 +1,13 @@
-from passlib.context import CryptContext
+from pwdlib import PasswordHash
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+password_hash = PasswordHash.recommended()
 
 
 def hash_password(password: str) -> str:
     """Хеширование пароля."""
-    return pwd_context.hash(password)
+    return password_hash.hash(password)
 
 
 def verify_password(plane_password: str, hashed_password: str) -> bool:
     """Проверка пароля."""
-    return pwd_context.verify(plane_password, hashed_password)
+    return password_hash.verify(plane_password, hashed_password)
