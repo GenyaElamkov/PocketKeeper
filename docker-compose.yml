@@ -1,21 +1,65 @@
 services:
   db:
     image: postgres:17-alpine
-    container_name: pocketkeeper_db_container
+    container_name: ${DB_CONTAINER:-pocketkeeper_db_container}
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app
+
+  # Одноразовый прогон миграций перед стартом приложения.
+  # Использует тот же production-образ, что и app, только другую команду.
+  migrate:
+    build:
+      context: .
+      target: production
     env_file:
       - .env
-    restart: always
-    ports:
-      - "5432:5432"
-    volumes: 
-      - db:/var/lib/postgresql/data
+    environment:
+      DB_HOST: db
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
-      - app 
+      - app
+
+  app:
+    build:
+      context: .
+      target: production
+    container_name: pocketkeeper_app
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+    ports:
+      - "8000:8000"
+    volumes:
+      - logs:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - app
 
 volumes:
-  db:
+  db_data:
     driver: local
-  cache:
+  logs:
     driver: local
 
 networks:

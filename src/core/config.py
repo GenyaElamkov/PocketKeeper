@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -22,7 +24,8 @@ class LogConfig(BaseSettings):
     """Конфигурация логирования."""
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    path: str = "logs"
+    base_dir: Path = Path(__file__).resolve().parents[2]
+    log_dir: str = "logs"
     name: str = "app_{time:YYYY-MM-DD}.log"
     retention: str = "30 days"
     rotation: str = "1 day"
@@ -30,6 +33,16 @@ class LogConfig(BaseSettings):
     compression: str = "zip"
     log_format: str = "{message}"
     serialization: bool = True
+
+    @property
+    def log_path(self) -> Path:
+        """Возвращает Path для логов."""
+        return self.base_dir / self.log_dir
+
+    @property
+    def full_log_path(self) -> Path:
+        """Возвращает полный путь к файлу лога."""
+        return self.log_path / self.name
 
 
 class DatabaseConfig(BaseSettings):

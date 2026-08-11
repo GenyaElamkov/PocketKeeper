@@ -172,8 +172,9 @@ class AuthService:
                 detail="Неверный логин или пароль",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        access_token = create_access_token(data={"sub": user.email, "role": user.role, "id": user.id})
-        refresh_token = create_refresh_token(data={"sub": user.email, "role": user.role, "id": user.id})
+        # id в токене должен быть строкой, чтобы избежать проблем с сериализацией в JSON
+        access_token = create_access_token(data={"sub": user.email, "role": user.role, "id": str(user.id)})
+        refresh_token = create_refresh_token(data={"sub": user.email, "role": user.role, "id": str(user.id)})
         logger.info(
             {"event": "create_login_token_success", "user_id": user.id},
         )
@@ -185,7 +186,8 @@ class AuthService:
 
     async def update_refresh_token(self, user: UserUpdateRefreshToken) -> dict:
         """Обновление refresh-токена."""
-        new_refresh_token = create_refresh_token(data={"sub": user.email, "role": user.role, "id": user.id})
+        # id в токене должен быть строкой, чтобы избежать проблем с сериализацией в JSON
+        new_refresh_token = create_refresh_token(data={"sub": user.email, "role": user.role, "id": str(user.id)})
         logger.info(
             {"event": "update_refresh_token_success", "user_id": user.id},
         )
@@ -196,11 +198,12 @@ class AuthService:
 
     async def update_access_token(self, user: UserUpdateRefreshToken) -> dict:
         """Обновление access-токена."""
+        # id в токене должен быть строкой, чтобы избежать проблем с сериализацией в JSON
         new_access_token = create_access_token(
             data={
                 "sub": user.email,
                 "role": user.role,
-                "id": user.id,
+                "id": str(user.id),
             },
         )
         logger.info(
@@ -223,12 +226,12 @@ class AuthService:
                 {"event": "forgot_password_unknown_email"},
             )
             return {"message": "Инструкции отправлены на почту."}
-
+        # id в токене должен быть строкой, чтобы избежать проблем с сериализацией в JSON
         raw_token = create_reset_token(
             data={
                 "sub": user.email,
                 "role": user.role,
-                "id": user.id,
+                "id": str(user.id),
             },
         )
         reset_link = f"{settings.frontend.url}/reset-password?token={raw_token}"

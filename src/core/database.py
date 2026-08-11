@@ -1,3 +1,5 @@
+from uuid import UUID, uuid4
+
 from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker,
                                     create_async_engine)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -24,7 +26,25 @@ async_session_maker = async_sessionmaker(
 
 
 class Base(DeclarativeBase):
-    id: Mapped[int] = mapped_column(primary_key=True) # noqa
+    pass
+
+
+class UUIDBase(Base):
+    """Базовый класс с UUID для защищенных сущностей"""
+    __abstract__ = True
+
+    id: Mapped[UUID] = mapped_column(   # noqa
+        primary_key=True,
+        default=uuid4,
+        server_default="gen_random_uuid()",
+    )
+
+
+class IntBase(Base):
+    """Базовый класс с Integer ID для внутренних сущностей"""
+    __abstract__ = True
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True) # noqa
 
 
 async def create_db_and_tables():
