@@ -4,7 +4,8 @@ Backend-сервис семейного финансового трекера **
 
 Построен на **FastAPI** + **PostgreSQL**, полностью контейнеризован и готов к продакшен-развёртыванию через Docker.
 
-> Frontend (Vue.js SPA) разрабатывается в отдельном репозитории и обращается к этому API по адресу, указанному в `CORS_ALLOW_ORIGINS`.
+> Frontend (Vue.js SPA) разрабатывается в отдельном репозитории https://github.com/GenyaElamkov/finance-frontend и обращается к этому API по адресу, указанному в `CORS_ALLOW_ORIGINS`.
+
 > Production в отдельном репозитории https://github.com/GenyaElamkov/finance-infra
 
 ---
