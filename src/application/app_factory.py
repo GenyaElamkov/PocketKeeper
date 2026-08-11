@@ -6,9 +6,10 @@ from fastapi.middleware.gzip import GZipMiddleware
 from loguru import logger
 from slowapi.errors import RateLimitExceeded
 from slowapi.extension import _rate_limit_exceeded_handler
+from sqlalchemy import text
 
 from src.core.config import settings
-from src.core.database import create_db_and_tables
+from src.core.database import async_engine
 from src.infrastructure.infra_logging import log_requests_middleware
 from src.infrastructure.infra_rate_limiter import limiter
 from src.infrastructure.security_headers import SecurityHeadersMiddleware
@@ -18,13 +19,16 @@ from src.infrastructure.security_headers import SecurityHeadersMiddleware
 async def lifespan(app: FastAPI):
     logger.info({"event": "Connecting to database..."})
     try:
-        await create_db_and_tables()
+        # await create_db_and_tables()
+        async with async_engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
         logger.info({"event": "Database connected successfully"})
     except Exception as e:
         logger.error({"event": "Database connection failed", "error": str(e)})
         raise
     yield
     logger.info({"event": "Disconnecting from database..."})
+    await async_engine.dispose()
 
 
 def create_app() -> FastAPI:

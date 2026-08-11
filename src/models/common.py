@@ -10,6 +10,8 @@ def get_current_dt() -> datetime:
 
 
 class TimeBase:
+    __abstract__ = True
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=get_current_dt,

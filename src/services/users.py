@@ -49,7 +49,7 @@ class UserService:
 
     async def create_user(self, user: UserCreate) -> User:
         """Создать пользователя."""
-        logger.info({"event": "user_creation_attempt", "user_id": user.email})
+        logger.info({"event": "user_creation_attempt", "user": user.email})
 
         user_existed = await self.user_repo.user_exists(user.email)
         if user_existed:

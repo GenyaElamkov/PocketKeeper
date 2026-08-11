@@ -1,11 +1,13 @@
 from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from sqlalchemy import BOOLEAN, DATE, DECIMAL, ForeignKey, Index, String
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.core.database import Base
+from src.core.database import IntBase
 from src.models.common import TimeBase as TimeBaseMixin
 
 if TYPE_CHECKING:
@@ -14,7 +16,7 @@ if TYPE_CHECKING:
     from models.users import User
 
 
-class Transaction(Base, TimeBaseMixin):
+class Transaction(IntBase, TimeBaseMixin):
     __tablename__ = "transactions"
 
     __table_args__ = (
@@ -24,7 +26,11 @@ class Transaction(Base, TimeBaseMixin):
         Index("ix_transactions_transaction_date", "transaction_date"),
     )
 
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    user_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
     account_id: Mapped[int] = mapped_column(ForeignKey("accounts.id"), nullable=False)
     category_id: Mapped[int] = mapped_column(ForeignKey("categories.id"), nullable=False)
     amount: Mapped[Decimal] = mapped_column(DECIMAL(10, 2), nullable=False)

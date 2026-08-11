@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import Enum
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, SecretStr
 
@@ -18,7 +19,7 @@ class UserCreate(BaseModel):
 
 class User(BaseModel):
     """Модель для вывода пользователя"""
-    id: int = Field(..., description="Уникальный идентификатор пользователя")   # noqa
+    id: UUID = Field(..., description="Уникальный идентификатор пользователя")   # noqa
     email: EmailStr = Field(..., description="Email для входа")
     full_name: str = Field(..., description="Полное имя пользователя")
     is_active: bool = Field(..., description="Активен ли аккаунт")
@@ -57,7 +58,7 @@ class UserRequest(BaseModel):
 
 class UserUpdateRefreshToken(BaseModel):
     """Модель для обновления токена"""
-    id: int = Field(..., description="Уникальный идентификатор пользователя")   # noqa
+    id: UUID = Field(..., description="Уникальный идентификатор пользователя")   # noqa
     email: EmailStr = Field(..., description="Email для входа")
     role: UserRole = Field(..., description="Роль")
 

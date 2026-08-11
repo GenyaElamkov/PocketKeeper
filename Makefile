@@ -21,3 +21,4 @@ dev-logs:
 
 dev-migrate:
 	$(DC) -f docker-compose.dev.yml $(ENV) run --rm migrate
+

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import BOOLEAN, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.core.database import Base
+from src.core.database import UUIDBase
 from src.models.common import TimeBase as TimeBaseMixin
 
 if TYPE_CHECKING:
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from models.transactions import Transaction
 
 
-class User(Base, TimeBaseMixin):
+class User(UUIDBase, TimeBaseMixin):
     __tablename__ = 'users'
 
     email: Mapped[str] = mapped_column(String(254), unique=True, index=True, nullable=False)
