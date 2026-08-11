@@ -7,9 +7,8 @@ LOGS = docker logs
 ENV = --env-file .env
 
 
-.PHONY: dev-up dev-down dev-logs dev-migrate prod-up prod-down prod-logs prod-migrate
+.PHONY: dev-up dev-down dev-logs dev-migrate
 
-# --- Разработка (hot-reload, код монтируется с хоста) ---
 dev-up:
 	$(DC) -f docker-compose.dev.yml $(ENV) up -d --build
 
