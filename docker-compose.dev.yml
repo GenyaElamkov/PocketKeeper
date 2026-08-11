@@ -54,8 +54,6 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
-      # именованный volume поверх .venv не даёт bind mount репозитория
-      # затереть зависимости, установленные внутри образа
       - venv_dev:/app/.venv
     depends_on:
       db:
