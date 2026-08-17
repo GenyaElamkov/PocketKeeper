@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 from datetime import date
+from decimal import Decimal
 from typing import Optional
 
 from sqlalchemy import case, func, select, update
@@ -87,7 +88,7 @@ class TransactionRepository:
                 Transaction.is_active.is_(True),
             ),
         )
-        transactions_sum = result.scalar() or 0.0
+        transactions_sum = result.scalar() or Decimal(0)
         account = await self.db.get(Account, account_id)
 
         account.balance = account.initial_balance + transactions_sum
