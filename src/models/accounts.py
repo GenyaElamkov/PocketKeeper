@@ -11,6 +11,7 @@ from src.models.common import TimeBase as TimeBaseMixin
 
 
 class Account(IntBase, TimeBaseMixin):
+    """Модель для счетов"""
     __tablename__ = "accounts"
 
     user_id: Mapped[UUID] = mapped_column(
