@@ -12,6 +12,23 @@ class TransferRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    async def get_by_id(self, transfer_id: int) -> Transfer | None:
+        """Получить информацию о активном переводе по его ID."""
+        filters = [
+            Transfer.id == transfer_id,
+            Transfer.is_active.is_(True),
+        ]
+        return await self.db.scalar(select(Transfer).filter(*filters))
+
+    async def get_active_all_by_user_id(self, user_id: UUID) -> list[Transfer]:
+        """Получение всех переводов между счетами пользователя."""
+        filters = [
+            Transfer.user_id == user_id,
+            Transfer.is_active.is_(True),
+        ]
+        db_transfers = await self.db.scalars(select(Transfer).filter(*filters))
+        return db_transfers.all()
+
     async def create(
             self,
             transfer_data: dict,
@@ -24,19 +41,6 @@ class TransferRepository:
         await self.db.refresh(db_transfer)
         return db_transfer
 
-    async def get_by_id(self, transfer_id: int) -> Transfer | None:
-        """Получить информацию о конкретном платеже по его ID."""
-        return await self.db.get(Transfer, transfer_id)
-
-    async def get_all_by_user_id(self, user_id: UUID) -> list[Transfer]:
-        """ Получение всех переводов пользователя."""
-        filters = [
-            Transfer.user_id == user_id,
-        ]
-        db_transfers = await self.db.scalars(
-            select(Transfer).filter(*filters))
-        return db_transfers.all()
-
     async def delete(self, transfer: Transfer) -> None:
         """
         Удаляет переводы, которые были созданы до указанной даты.
@@ -44,4 +48,4 @@ class TransferRepository:
         а помечается как неактивная.
         """
         transfer.is_active = False
-        await self.db.flush()
+        await self.db.commit()
