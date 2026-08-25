@@ -1,4 +1,9 @@
+from uuid import UUID
+
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.models.transfers import Transfer
 
 
 class TransferRepository:
@@ -7,14 +12,36 @@ class TransferRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def create(self) -> None:
+    async def create(
+            self,
+            transfer_data: dict,
+            user_id: UUID,
+    ) -> Transfer:
         """Создать новый перевода на основе данных из запроса."""
+        db_transfer = Transfer(**transfer_data, user_id=user_id)
+        self.db.add(db_transfer)
+        await self.db.commit()
+        await self.db.refresh(db_transfer)
+        return db_transfer
 
-    async def get_by_id(self) -> None:
+    async def get_by_id(self, transfer_id: int) -> Transfer | None:
         """Получить информацию о конкретном платеже по его ID."""
+        return await self.db.get(Transfer, transfer_id)
 
-    async def get_all_by_user_id(self) -> None:
+    async def get_all_by_user_id(self, user_id: UUID) -> list[Transfer]:
         """ Получение всех переводов пользователя."""
+        filters = [
+            Transfer.user_id == user_id,
+        ]
+        db_transfers = await self.db.scalars(
+            select(Transfer).filter(*filters))
+        return db_transfers.all()
 
-    async def delete(self) -> None:
-        """Удаляет переводы, которые были созданы до указанной даты."""
+    async def delete(self, transfer: Transfer) -> None:
+        """
+        Удаляет переводы, которые были созданы до указанной даты.
+        Удаление происходит мягко, то есть запись не удаляется из базы данных,
+        а помечается как неактивная.
+        """
+        transfer.is_active = False
+        await self.db.flush()

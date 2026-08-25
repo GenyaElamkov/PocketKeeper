@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 from uuid import UUID
 
 from sqlalchemy import BOOLEAN, DECIMAL, ForeignKey, String
@@ -8,6 +8,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.core.database import IntBase
 from src.models.common import TimeBase as TimeBaseMixin
+
+if TYPE_CHECKING:
+    pass
 
 
 class Account(IntBase, TimeBaseMixin):
@@ -27,3 +30,16 @@ class Account(IntBase, TimeBaseMixin):
     is_active: Mapped[bool] = mapped_column(BOOLEAN, default=True)
 
     transactions = relationship("Transaction", back_populates="account")
+    transfers_from = relationship(
+        "Transfer",
+        foreign_keys="Transfer.from_account_id",
+        back_populates="from_account",
+        viewonly=True,
+    )
+
+    transfers_to = relationship(
+        "Transfer",
+        foreign_keys="Transfer.to_account_id",
+        back_populates="to_account",
+        viewonly=True,
+    )

@@ -9,6 +9,7 @@ from src.models.common import TimeBase as TimeBaseMixin
 if TYPE_CHECKING:
     from models.categories import Category
     from models.transactions import Transaction
+    from models.transfers import Transfer
 
 
 class User(UUIDBase, TimeBaseMixin):
@@ -22,3 +23,4 @@ class User(UUIDBase, TimeBaseMixin):
 
     categories: Mapped[list["Category"]] = relationship("Category", back_populates="user")
     transactions: Mapped[list["Transaction"]] = relationship("Transaction", back_populates="user")
+    transfers: Mapped[list['Transfer']] = relationship("Transfer", back_populates='user')

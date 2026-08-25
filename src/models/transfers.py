@@ -21,7 +21,8 @@ class Transfer(IntBase, TimeBaseMixin):
 
     __table_args__ = (
         Index("ix_transfer_user_id", "user_id"),
-        Index("ix_transfer_account_id", "account_id"),
+        Index("ix_transfer_from_account_id", "from_account_id"),
+        Index("ix_transfer_to_account_id", "to_account_id"),
         Index("ix__transfer_date", "transfer_date"),
     )
 
@@ -30,12 +31,22 @@ class Transfer(IntBase, TimeBaseMixin):
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
     )
-    from_account_id: Mapped[int] = mapped_column(ForeignKey("account.id"), nullable=False)
-    to_account_id: Mapped[int] = mapped_column(ForeignKey("account.id"), nullable=False)
+    from_account_id: Mapped[int] = mapped_column(ForeignKey("accounts.id"), nullable=False)
+    to_account_id: Mapped[int] = mapped_column(ForeignKey("accounts.id"), nullable=False)
     amount: Mapped[Decimal] = mapped_column(DECIMAL(10, 2), nullable=False)
     description: Mapped[str | None] = mapped_column(String(200), nullable=True)
     transfer_date: Mapped[date] = mapped_column(DATE, nullable=False)
     is_active: Mapped[bool] = mapped_column(BOOLEAN, default=True)
 
     user: Mapped["User"] = relationship("User", back_populates="transfers")
-    account: Mapped["Account"] = relationship("Account", back_populates="transfers")
+    from_account: Mapped["Account"] = relationship(
+        "Account",
+        foreign_keys=[from_account_id],
+        back_populates="transfers_from",
+    )
+
+    to_account: Mapped["Account"] = relationship(
+        "Account",
+        foreign_keys=[to_account_id],
+        back_populates="transfers_to",
+    )
