@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.transfers import Transfer
@@ -20,14 +20,28 @@ class TransferRepository:
         ]
         return await self.db.scalar(select(Transfer).filter(*filters))
 
-    async def get_active_all_by_user_id(self, user_id: UUID) -> list[Transfer]:
+    async def get_filtered(
+            self,
+            user_id: UUID,
+            page: int,
+            page_size: int,
+    ) -> list[Transfer]:
         """Получение всех переводов между счетами пользователя."""
         filters = [
             Transfer.user_id == user_id,
             Transfer.is_active.is_(True),
         ]
-        db_transfers = await self.db.scalars(select(Transfer).filter(*filters))
-        return db_transfers.all()
+        total_stmt = select(func.count()).select_from(Transfer).where(*filters)
+        total = await self.db.scalar(total_stmt) or 0
+        transfer_stmt = (
+            select(Transfer)
+            .where(*filters)
+            .order_by(Transfer.transfer_date.desc())
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+        )
+        items = (await self.db.scalars(transfer_stmt)).all()
+        return items, total
 
     async def create(
             self,

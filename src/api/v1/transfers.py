@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, Request, status
 
 from src.api.v1.docs.transfer import (CREATE_TRANSFER_RESPONSES,
-                                      DELETE_TRANSFER_RESPONSES)
+                                      DELETE_TRANSFER_RESPONSES,
+                                      GET_ALL_TRANSFER_RESPONSES)
 from src.core.dependencies import get_current_member, get_transfer_service
 from src.infrastructure.infra_rate_limiter import limiter
-from src.schemas.transfers import Transfer, TransferCreate
+from src.schemas.transfers import (Transfer, TransferCreate, TransferList,
+                                   TransferRequest)
 from src.schemas.users import User
 from src.services.transfer import TransferService
 
@@ -12,6 +14,30 @@ router = APIRouter(
     prefix="/v1",
     tags=["Переводы"],
 )
+
+
+@router.get(
+        "/",
+        name="Список переводов между своими счетами",
+        response_model=TransferList,
+        summary="Получить список переводов пагинацией",
+        description="""
+        Возвращает список переводов текущего пользователя с поддержкой:
+
+        - **Пагинация**: `page` (по умолчанию 1), `page_size` (по умолчанию 20)
+        """,
+        response_description="Список переводов с пагинацией и общим количеством",
+        responses=GET_ALL_TRANSFER_RESPONSES,
+)
+@limiter.limit("10/minute")
+async def get_all_transactions(
+    request: Request,
+    transfer_request: TransferRequest = Depends(),
+    transfer_service: TransferService = Depends(get_transfer_service),
+    current_user: User = Depends(get_current_member),
+) -> TransferList:
+    """Список транзакций."""
+    return await transfer_service.get_all(transfer_request, current_user.id)
 
 
 @router.post(

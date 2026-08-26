@@ -14,6 +14,23 @@ class TransferCreate(BaseModel):
 
 
 class Transfer(TransferCreate):
+    """Модель для представления переводов между своими счетами."""
     id: int = Field(description="Уникальный идентификатор операции") # noqa
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class TransferList(BaseModel):
+    """Модель для представления списка переводов между своими счетами с пагинацией."""
+    items: list[Transfer] = Field(..., description="Список переводов")
+    total: int = Field(ge=0, description="Общее количество переводов")
+    page: int = Field(ge=1, description="Номер страницы")
+    page_size: int = Field(ge=1, description="Количество элементов на странице")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TransferRequest(BaseModel):
+    """Модель для фильтрации переводов."""
+    page: int = Field(ge=1, default=1, description="Номер страницы")
+    page_size: int = Field(ge=1, le=100, default=20, description="Количество элементов на странице")

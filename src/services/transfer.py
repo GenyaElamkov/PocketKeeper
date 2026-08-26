@@ -5,7 +5,8 @@ from loguru import logger
 
 from src.repositories.accounts import AccountRepository
 from src.repositories.transfer import TransferRepository
-from src.schemas.transfers import Transfer, TransferCreate
+from src.schemas.transfers import (Transfer, TransferCreate, TransferList,
+                                   TransferRequest)
 
 
 class TransferService:
@@ -18,6 +19,20 @@ class TransferService:
     ):
         self.transfer_repo = transfer_repo
         self.account_repo = account_repo
+
+    async def get_all(self, request: TransferRequest, user_id: UUID) -> TransferList:
+        """Получить все транзакции пользователя."""
+        items, total = await self.transfer_repo.get_filtered(
+            user_id=user_id,
+            page=request.page,
+            page_size=request.page_size,
+        )
+        return {
+            "items": items,
+            "total": total,
+            "page": request.page,
+            "page_size": request.page_size,
+        }
 
     async def create_transfer(self, transfer: TransferCreate, user_id: UUID) -> Transfer:
         """Создать перевод между своими счетами."""
@@ -106,7 +121,7 @@ class TransferService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Account not found",
             )
-
+        # Обновление балласов
         to_account.balance -= db_transfer.amount
         from_account.balance += db_transfer.amount
         logger.info({"event": "account_balance_updated", "user_id": user_id})
