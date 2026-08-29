@@ -11,7 +11,7 @@ from src.schemas.users import User
 from src.services.transfer import TransferService
 
 router = APIRouter(
-    prefix="/v1",
+    prefix="/transfers",
     tags=["Переводы"],
 )
 
@@ -41,7 +41,7 @@ async def get_all_transactions(
 
 
 @router.post(
-        "/transfers",
+        "/",
         name="Создать перевод между своими счетами",
         response_model=Transfer,
         status_code=status.HTTP_201_CREATED,
