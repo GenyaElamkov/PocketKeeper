@@ -13,6 +13,7 @@ from src.schemas.transactions import TransactionType
 
 class TransactionRepository:
     """Репозиторий для работы с транзакциями."""
+
     def __init__(self, db: AsyncSession):
         self.db = db
 

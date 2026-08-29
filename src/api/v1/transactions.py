@@ -43,7 +43,7 @@ async def get_all_transactions(
     transaction_service: TransactionService = Depends(get_transaction_service),
     current_user: User = Depends(get_current_member),
 ) -> TransactionList:
-    """Список транзакций"""
+    """Список транзакций."""
     return await transaction_service.get_all(transaction_request, current_user.id)
 
 
@@ -70,7 +70,7 @@ async def create_transaction(
     transaction_service: TransactionService = Depends(get_transaction_service),
     current_user: User = Depends(get_current_member),
 ) -> Transaction:
-    """Создание транзакции"""
+    """Создание транзакции."""
     return await transaction_service.create_transaction(transaction, current_user.id)
 
 
@@ -96,13 +96,13 @@ async def update_transaction(
     transaction_service: TransactionService = Depends(get_transaction_service),
     current_user: User = Depends(get_current_member),
 ) -> Transaction:
-    """Обновление транзакции"""
+    """Обновление транзакции."""
     return await transaction_service.update_transaction(transaction_id, update_data, current_user.id)
 
 
 @router.delete(
         "/{transaction_id}",
-        name="Удалить транзакцию",
+        name="Удалить транзакцию.",
         response_model=Transaction,
         status_code=status.HTTP_200_OK,
         summary="Удалить транзакцию (возврат баланса)",
@@ -120,5 +120,5 @@ async def delete_transaction(
     transaction_service: TransactionService = Depends(get_transaction_service),
     current_user: User = Depends(get_current_member),
 ) -> Transaction:
-    """Удаление транзакции"""
+    """Удаление транзакции."""
     return await transaction_service.delete_transaction(transaction_id, current_user.id)
