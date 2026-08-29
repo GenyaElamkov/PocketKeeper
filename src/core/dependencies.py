@@ -10,6 +10,7 @@ from src.repositories.accounts import AccountRepository
 from src.repositories.analytics import AnalyticRepository
 from src.repositories.categories import CategoryRepository
 from src.repositories.transactions import TransactionRepository
+from src.repositories.transfer import TransferRepository
 from src.repositories.users import UserRepository
 from src.schemas.users import User
 from src.services.accounts import AccountService
@@ -17,6 +18,7 @@ from src.services.analytics import AnalyticService
 from src.services.auth import AuthService
 from src.services.categories import CategoryService
 from src.services.transactions import TransactionService
+from src.services.transfer import TransferService
 from src.services.users import UserService
 
 
@@ -39,6 +41,10 @@ def get_account_repository(db: AsyncSession = Depends(get_async_db)) -> AccountR
 
 def get_transaction_repository(db: AsyncSession = Depends(get_async_db)) -> TransactionRepository:
     return TransactionRepository(db=db)
+
+
+def get_transfer_repository(db: AsyncSession = Depends(get_async_db)) -> TransferRepository:
+    return TransferRepository(db=db)
 
 
 def get_analytic_repository(db: AsyncSession = Depends(get_async_db)) -> AnalyticRepository:
@@ -85,6 +91,16 @@ def get_transaction_service(
     )
 
 
+def get_transfer_service(
+        transfer_repo: TransferRepository = Depends(get_transfer_repository),
+        account_repo: AccountRepository = Depends(get_account_repository),
+) -> TransferService:
+    return TransferService(
+        transfer_repo=transfer_repo,
+        account_repo=account_repo,
+    )
+
+
 def get_analytic_service(
         analytic_repo: AnalyticRepository = Depends(get_analytic_repository),
 ) -> AnalyticService:
@@ -113,4 +129,5 @@ async def get_current_member(
         token: str = Depends(oauth2_scheme),
         auth_service: AuthService = Depends(get_auth_service),
 ) -> User:
+    """Получить пользователя по токену."""
     return await auth_service.get_current_member(token)

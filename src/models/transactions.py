@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
 
 class Transaction(IntBase, TimeBaseMixin):
+    """Модель для транзакций."""
     __tablename__ = "transactions"
 
     __table_args__ = (
