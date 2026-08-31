@@ -8,6 +8,7 @@ from src.core.security.oauth import oauth2_scheme
 from src.infrastructure.infra_email import SMTPEmailService
 from src.repositories.accounts import AccountRepository
 from src.repositories.analytics import AnalyticRepository
+from src.repositories.balance import BalanceRepository
 from src.repositories.categories import CategoryRepository
 from src.repositories.transactions import TransactionRepository
 from src.repositories.transfer import TransferRepository
@@ -47,6 +48,10 @@ def get_transfer_repository(db: AsyncSession = Depends(get_async_db)) -> Transfe
     return TransferRepository(db=db)
 
 
+def get_balance_repository(db: AsyncSession = Depends(get_async_db)) -> BalanceRepository:
+    return BalanceRepository(db=db)
+
+
 def get_analytic_repository(db: AsyncSession = Depends(get_async_db)) -> AnalyticRepository:
     return AnalyticRepository(db=db)
 
@@ -83,21 +88,25 @@ def get_transaction_service(
         transaction_repo: TransactionRepository = Depends(get_transaction_repository),
         account_repo: AccountRepository = Depends(get_account_repository),
         category_repo: CategoryRepository = Depends(get_category_repository),
+        balance_repo: BalanceRepository = Depends(get_balance_repository),
 ) -> TransactionService:
     return TransactionService(
         transaction_repo=transaction_repo,
         account_repo=account_repo,
         category_repo=category_repo,
+        balance_repo=balance_repo,
     )
 
 
 def get_transfer_service(
         transfer_repo: TransferRepository = Depends(get_transfer_repository),
         account_repo: AccountRepository = Depends(get_account_repository),
+        balance_repo: BalanceRepository = Depends(get_balance_repository),
 ) -> TransferService:
     return TransferService(
         transfer_repo=transfer_repo,
         account_repo=account_repo,
+        balance_repo=balance_repo,
     )
 
 

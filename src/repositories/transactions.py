@@ -1,12 +1,10 @@
 from collections.abc import Sequence
 from datetime import date
-from decimal import Decimal
 from typing import Optional
 
-from sqlalchemy import case, func, select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.models.accounts import Account
 from src.models.transactions import Transaction
 from src.schemas.transactions import TransactionType
 
@@ -74,26 +72,6 @@ class TransactionRepository:
         await self.db.flush()
         await self.db.refresh(db_transaction)
         return db_transaction
-
-    async def update_account_balance(self, account_id: int) -> None:
-        """Обновить баланс счета."""
-        balance_delta = case(
-            (Transaction.transaction_type == TransactionType.income, Transaction.amount),
-            (Transaction.transaction_type == TransactionType.expense, -Transaction.amount),
-            else_=0,
-        )
-
-        result = await self.db.execute(
-            select(func.sum(balance_delta)).where(
-                Transaction.account_id == account_id,
-                Transaction.is_active.is_(True),
-            ),
-        )
-        transactions_sum = result.scalar() or Decimal(0)
-        account = await self.db.get(Account, account_id)
-
-        account.balance = account.initial_balance + transactions_sum
-        await self.db.commit()
 
     async def update(self, transaction_id: int, data: dict) -> None:
         """Обновить транзакцию."""

@@ -4,6 +4,7 @@ from fastapi import HTTPException, status
 from loguru import logger
 
 from src.repositories.accounts import AccountRepository
+from src.repositories.balance import BalanceRepository
 from src.repositories.transfer import TransferRepository
 from src.schemas.transfers import (Transfer, TransferCreate, TransferList,
                                    TransferRequest)
@@ -16,9 +17,11 @@ class TransferService:
             self,
             transfer_repo=TransferRepository,
             account_repo=AccountRepository,
+            balance_repo=BalanceRepository,
     ):
         self.transfer_repo = transfer_repo
         self.account_repo = account_repo
+        self.balance_repo = balance_repo
 
     async def get_all(self, request: TransferRequest, user_id: UUID) -> TransferList:
         """Получить все транзакции пользователя."""
@@ -84,13 +87,14 @@ class TransferService:
                 detail="Currency mismatch",
             )
 
-        from_account.balance -= transfer.amount
-        to_account.balance += transfer.amount
         new_transfer = await self.transfer_repo.create(
             transfer.model_dump(exclude_unset=True),
             user_id,
         )
+        await self.balance_repo.recalculate(to_account.id)
+        await self.balance_repo.recalculate(from_account.id)
         logger.info({"event": "transfer_creation_success", "user_id": user_id})
+
         return new_transfer
 
     async def delete_transfer(self, transfer_id: int, user_id: UUID) -> Transfer:
@@ -122,8 +126,8 @@ class TransferService:
                 detail="Account not found",
             )
         # Обновление балласов
-        to_account.balance -= db_transfer.amount
-        from_account.balance += db_transfer.amount
+        await self.balance_repo.recalculate(to_account.id)
+        await self.balance_repo.recalculate(from_account.id)
         logger.info({"event": "account_balance_updated", "user_id": user_id})
 
         await self.transfer_repo.delete(db_transfer)
