@@ -2,6 +2,7 @@ from fastapi import HTTPException, status
 from loguru import logger
 
 from src.repositories.accounts import AccountRepository
+from src.repositories.balance import BalanceRepository
 from src.repositories.categories import CategoryRepository
 from src.repositories.transactions import TransactionRepository
 from src.schemas.transactions import (Transaction, TransactionCreate,
@@ -16,10 +17,12 @@ class TransactionService:
             transaction_repo: TransactionRepository,
             account_repo: AccountRepository,
             category_repo: CategoryRepository,
+            balance_repo: BalanceRepository,
     ):
         self.transaction_repo = transaction_repo
         self.account_repo = account_repo
         self.category_repo = category_repo
+        self.balance_repo = balance_repo
 
     async def get_all(self, request: TransactionRequest, user_id: int) -> TransactionList:
         """Получить все транзакции конкретного пользователя."""
@@ -65,7 +68,7 @@ class TransactionService:
             transaction.model_dump(exclude_unset=True),
             user_id=user_id,
         )
-        await self.transaction_repo.update_account_balance(transaction.account_id)
+        await self.balance_repo.recalculate(transaction.account_id)
 
         logger.info({"event": "transaction_creation_success", "user_id": user_id})
         return new_transaction
@@ -96,7 +99,7 @@ class TransactionService:
         await self.transaction_repo.update(transaction_id, update_data.model_dump(exclude_unset=True))
         logger.info({"event": "transaction_update_success", "user_id": user_id})
 
-        await self.transaction_repo.update_account_balance(update_data.account_id)
+        await self.balance_repo.recalculate(update_data.account_id)
         logger.info({"event": "account_balance_updated", "user_id": user_id})
 
         return await self.transaction_repo.get_active_transaction_by_id(transaction_id)
@@ -123,7 +126,7 @@ class TransactionService:
         await self.transaction_repo.delete(db_transaction)
         logger.info({"event": "transaction_deletion_success", "user_id": user_id})
 
-        await self.transaction_repo.update_account_balance(db_transaction.account_id)
+        await self.balance_repo.recalculate(db_transaction.account_id)
         logger.info({"event": "account_balance_updated", "user_id": user_id})
 
         return db_transaction
