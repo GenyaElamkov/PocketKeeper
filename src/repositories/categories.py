@@ -29,6 +29,14 @@ class CategoryRepository:
         )
         return result.all()
 
+    async def has_active_children(self, category_id: int) -> bool:
+        """Проверить, есть ли у категории активные дочерние категории."""
+        filters = [
+            Category.parent_id == category_id,
+            Category.is_active.is_(True),
+        ]
+        return await self.db.scalar(select(Category).filter(*filters)) is not None
+
     async def name_exists(self, name: str, user_id: int) -> bool:
         """Проверить, существует ли категория с таким названием у пользователя."""
         filters = [
