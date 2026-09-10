@@ -1,6 +1,7 @@
+from uuid import UUID
+
 from src.repositories.analytics import AnalyticRepository
-from src.schemas.analytics import (Analytic, AnalyticCategoryList,
-                                   AnalyticRequest, AnalyticYearlyRequest)
+from src.schemas.analytics import AnalyticCategoryList
 from src.schemas.transactions import TransactionType
 
 
@@ -12,45 +13,29 @@ class AnalyticService:
     ):
         self.analytic_repo = analytic_repo
 
-    async def get_monthly_summary(self, request: AnalyticRequest, user_id: int) -> Analytic:
-        """Получить отчет по транзакциям."""
-        total_income = await self.analytic_repo.get_total_month(
-            user_id,
-            request.month,
-            request.year,
-            TransactionType.income,
+    async def get_summary_for_month(
+            self,
+            month: int,
+            year: int,
+            transaction_type: TransactionType,
+            user_id: UUID,
+    ) -> AnalyticCategoryList:
+        """
+        Получить отчет по транзакциям за текущий месяц.
+        Отчет формируется по категориям, итоговыми суммами и процентами
+            category: str - Категория
+            total: Decimal - Общая сумма
+            percentage: float = Процент от общей суммы
+        """
+        summary_data = await self.analytic_repo.get_total_category(
+            user_id=user_id,
+            month=month,
+            year=year,
+            transaction_type=transaction_type,
         )
-        total_expense = await self.analytic_repo.get_total_month(
-            user_id,
-            request.month,
-            request.year,
-            TransactionType.expense,
-        )
+        total_amount = sum(item.get('total', 0) for item in summary_data)
+        for item in summary_data:
+            item['percentage'] = round((item.get('total', 0) / total_amount * 100) if total_amount else 0.0)
 
-        return {
-            "total_income": total_income,
-            "total_expense": total_expense,
-            "balance": total_income - abs(total_expense),
-        }
-
-    async def get_yearly_summary(self, request: AnalyticYearlyRequest, user_id: int) -> Analytic:
-        """Получить отчет по годам."""
-        total_income = await self.analytic_repo.get_total_year(
-            user_id,
-            request.year,
-            TransactionType.income,
-        )
-        total_expense = await self.analytic_repo.get_total_year(
-            user_id,
-            request.year,
-            TransactionType.expense,
-        )
-
-        return {
-            "total_income": total_income,
-            "total_expense": total_expense,
-            "balance": total_income - abs(total_expense),
-        }
-
-    async def get_category_summary(self, request: AnalyticRequest, user_id: int) -> AnalyticCategoryList:
-        """Получить отчет по категориям."""
+        summary_data.sort(key=lambda x: x['percentage'], reverse=True)
+        return AnalyticCategoryList(items=summary_data)

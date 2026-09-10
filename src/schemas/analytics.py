@@ -1,31 +1,19 @@
-from pydantic import BaseModel, Field
+from decimal import Decimal
 
-
-class Analytic(BaseModel):
-    """Модель для аналитики"""
-    total_income: float = Field(..., description="Общий доход")
-    total_expense: float = Field(..., description="Общий расход")
-    balance: float = Field(..., description="Остаток")
-
-
-class AnalyticRequest(BaseModel):
-    """Модель для аналитики ввода"""
-    month: int | None = Field(None, description="Месяц")
-    year: int | None = Field(None, description="Год")
-
-
-class AnalyticYearlyRequest(BaseModel):
-    """Модель для аналитики за определенный год"""
-    year: int = Field(..., description="Год")
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class AnalyticCategory(BaseModel):
     """Модель для аналитики по категориям"""
     category: str = Field(..., description="Категория")
-    total: float = Field(..., description="Общая сумма")
-    precent: float = Field(..., description="Процент от общего")
+    total: Decimal = Field(..., description="Общая сумма")
+    percentage: float = Field(..., description="Процент от общего")
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AnalyticCategoryList(BaseModel):
     """Список по категориям"""
     items: list[AnalyticCategory] = Field(..., description="Список отчетов по категориям")
+
+    model_config = ConfigDict(from_attributes=True)
