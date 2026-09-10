@@ -1,8 +1,11 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends
 
+from src.api.v1.docs.analytics import GET_CURRENT_USER_RESPONSES
 from src.core.dependencies import get_analytic_service, get_current_member
-from src.schemas.analytics import (Analytic, AnalyticCategoryList,
-                                   AnalyticRequest, AnalyticYearlyRequest)
+from src.schemas.analytics import AnalyticCategoryList
+from src.schemas.transactions import TransactionType
 from src.schemas.users import User
 from src.services.analytics import AnalyticService
 
@@ -12,32 +15,23 @@ router = APIRouter(
 )
 
 
-@router.get("/monthly-summary", name="Отчет за месяц", response_model=Analytic)
-async def get_analytics_monthly_summary(
-    request: AnalyticRequest = Depends(),
-    analytics_service: AnalyticService = Depends(get_analytic_service),
-    current_user: User = Depends(get_current_member),
-
-) -> Analytic:
-    """Получение данных за месяц."""
-    return await analytics_service.get_monthly_summary(request, current_user.id)
-
-
-@router.get("/yearly-summary", name="Отчет за год", response_model=Analytic)
-async def get_analytics_yearly_summary(
-    request: AnalyticYearlyRequest = Depends(),
-    analytics_service: AnalyticService = Depends(get_analytic_service),
-    current_user: User = Depends(get_current_member),
-) -> Analytic:
-    """Получение данных за год."""
-    return await analytics_service.get_yearly_summary(request, current_user.id)
-
-
-@router.get("/category", name="Отчет по категориям", deprecated=True)
-async def get_analytics_category(
-    request: AnalyticRequest = Depends(),
+@router.get(
+        "/monthly-summary-by-category",
+        name="Отчет за месяц по категориям",
+        response_model=AnalyticCategoryList,
+        summary="Статистика траты",
+        description="Сводка расходов и дохода в разрезе каждой из существующих категории",
+        response_description="Список с данными о сумме транзакций",
+        responses=GET_CURRENT_USER_RESPONSES,
+)
+async def get_summary_by_category_for_current_month(
     analytics_service: AnalyticService = Depends(get_analytic_service),
     current_user: User = Depends(get_current_member),
 ) -> AnalyticCategoryList:
-    """Получение данных по категориям - сумма и процент."""
-    return await analytics_service.get_category_summary(request, current_user.id)
+    """Получение данных за текущий месяц по категориям (расходы)."""
+    return await analytics_service.get_summary_for_month(
+        month=date.today().month,
+        year=date.today().year,
+        transaction_type=TransactionType.expense,
+        user_id=current_user.id,
+    )
