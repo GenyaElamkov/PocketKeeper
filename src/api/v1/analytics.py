@@ -2,7 +2,7 @@ from datetime import date
 
 from fastapi import APIRouter, Depends
 
-from src.api.v1.analytics import GET_CURRENT_USER_RESPONSES
+from src.api.v1.docs.analytics import GET_CURRENT_USER_RESPONSES
 from src.core.dependencies import get_analytic_service, get_current_member
 from src.schemas.analytics import AnalyticCategoryList
 from src.schemas.transactions import TransactionType
