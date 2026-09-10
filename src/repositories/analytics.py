@@ -35,11 +35,11 @@ class AnalyticRepository:
         ]
         result = await self.db.execute(
             select(
-                Category.name.label("category"),
+                Category.id.label("category_id"),
                 func.coalesce(func.sum(Transaction.amount), 0.0).label("total"),
             )
             .join(Category, Transaction.category_id == Category.id)
             .filter(*filters)
-            .group_by(Category.name),
+            .group_by(Category.id),
         )
         return [dict(row) for row in result.mappings().all()]

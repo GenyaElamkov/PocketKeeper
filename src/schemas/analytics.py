@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class AnalyticCategory(BaseModel):
     """Модель для аналитики по категориям"""
-    category: str = Field(..., description="Категория")
+    category_id: int = Field(..., description="Индефикатор категории")
     total: Decimal = Field(..., description="Общая сумма")
     percentage: float = Field(..., description="Процент от общего")
 
