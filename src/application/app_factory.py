@@ -6,10 +6,14 @@ from fastapi.middleware.gzip import GZipMiddleware
 from loguru import logger
 from slowapi.errors import RateLimitExceeded
 from slowapi.extension import _rate_limit_exceeded_handler
+from sqladmin import Admin
 from sqlalchemy import text
+from starlette.middleware.sessions import SessionMiddleware
 
+from src.admin.auth import AdminAuth
+from src.admin.setup import register_admin_views
 from src.core.config import settings
-from src.core.database import async_engine
+from src.core.database import async_engine, async_session_maker
 from src.infrastructure.infra_logging import log_requests_middleware
 from src.infrastructure.infra_rate_limiter import limiter
 from src.infrastructure.security_headers import SecurityHeadersMiddleware
@@ -19,7 +23,6 @@ from src.infrastructure.security_headers import SecurityHeadersMiddleware
 async def lifespan(app: FastAPI):
     logger.info({"event": "Connecting to database..."})
     try:
-        # await create_db_and_tables()
         async with async_engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
         logger.info({"event": "Database connected successfully"})
@@ -49,13 +52,23 @@ def create_app() -> FastAPI:
         allow_headers=settings.cors.allow_headers,
         allow_credentials=settings.cors.allow_credentials,
     )
+    # Сессии
+    app.add_middleware(SessionMiddleware, secret_key=settings.auth.secret_key)
+
     # Заголовки безопастности
     app.add_middleware(SecurityHeadersMiddleware)
 
-    # TODO: Включить на продакшене когда будет HTTPS
     app.add_middleware(GZipMiddleware)
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+    # Админка
+    admin = Admin(
+        app,
+        session_maker=async_session_maker,
+        authentication_backend=AdminAuth(secret_key=settings.auth.secret_key),
+    )
+    register_admin_views(admin)
 
     @app.middleware("http")
     async def log_requests(request: Request, call_next):
