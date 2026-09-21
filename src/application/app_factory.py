@@ -6,6 +6,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from loguru import logger
 from slowapi.errors import RateLimitExceeded
 from slowapi.extension import _rate_limit_exceeded_handler
+from slowapi.middleware import SlowAPIMiddleware
 from sqladmin import Admin
 from sqlalchemy import text
 from starlette.middleware.sessions import SessionMiddleware
@@ -59,13 +60,17 @@ def create_app() -> FastAPI:
     app.add_middleware(SecurityHeadersMiddleware)
 
     app.add_middleware(GZipMiddleware)
+
+    # Лимитирование запросов
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    app.add_middleware(SlowAPIMiddleware)
 
     # Админка
     admin = Admin(
         app,
         session_maker=async_session_maker,
+        base_url=settings.admin_panel.base_url,
         authentication_backend=AdminAuth(secret_key=settings.auth.secret_key),
     )
     register_admin_views(admin)

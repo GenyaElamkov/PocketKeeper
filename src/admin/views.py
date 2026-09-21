@@ -41,7 +41,7 @@ class UserAdmin(ModelView, model=User):
 
     # Редактирование: доступна только роль.
     can_edit = True
-    form_columns = [User.role]
+    form_columns = [User.role, User.is_active]
     form_overrides = {"role": SelectField}
     form_args = {
         "role": {
