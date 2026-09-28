@@ -105,6 +105,11 @@ class ServerConfig(BaseSettings):
     port: int = Field(default=8000, validation_alias="PORT")
 
 
+class AdminPanelConfig(BaseSettings):
+    """Конфигурация административной панели."""
+    base_url: str = "/admin-secret-pocketkeeper"
+
+
 class Settings(BaseSettings):
     """Настройки приложения."""
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
@@ -118,6 +123,7 @@ class Settings(BaseSettings):
     frontend: FrontendConfig = FrontendConfig()
     log: LogConfig = LogConfig()
     email: EmailConfig = EmailConfig()
+    admin_panel: AdminPanelConfig = AdminPanelConfig()
 
     @property
     def debug(self) -> bool:

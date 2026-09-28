@@ -17,6 +17,7 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "python-multipart>=0.0.22",
     "slowapi>=0.1.10",
+    "sqladmin[auth]>=0.31.1",
     "sqlalchemy>=2.0.48",
 ]
 
