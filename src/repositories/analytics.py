@@ -1,5 +1,5 @@
-import calendar
 from datetime import date
+from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,24 +14,31 @@ class AnalyticRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_total_category(
+    async def get_total_by_category(
             self,
-            user_id: int,
-            year: int,
-            month:  int,
+            user_id: UUID,
+            date_from: date,
+            date_to: date,
             transaction_type: TransactionType,
     ) -> list[dict]:
         """
         Получить общую сумму по категории.
         Возвращает список словарей с ключами: category, total.
+        Пример результата:
+        {
+            "items": [
+                {
+                    "category_id": 0,
+                    "total": "0",
+                }
+            ]
+        }
         """
-        start_date = date(year, month, 1)
-        end_date = date(year, month, calendar.monthrange(year, month)[1])
         filters = [
             Transaction.user_id == user_id,
             Transaction.transaction_type == transaction_type,
             Transaction.is_active.is_(True),
-            Transaction.transaction_date.between(start_date, end_date),
+            Transaction.transaction_date.between(date_from, date_to),
         ]
         result = await self.db.execute(
             select(
