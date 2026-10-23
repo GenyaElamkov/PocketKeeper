@@ -44,8 +44,11 @@ async def get_summary_by_category_for_current_month(
         name='Общая статистика доходов и расходов',
         response_model=AnalyticResponse,
         summary="Доход - Расход",
-        description="Сводка расходов и дохода в разрезе каждой из существующих категории за указанный период",
-        response_description="Список с данными о сумме транзакций за указанный период",
+        description=(
+            "Итоги доходов и расходов за период, сравнение с предыдущим периодом "
+            "и разбивка по категориям с учетом вложенности"
+        ),
+        response_description="Итоги, сравнение с предыдущим периодом и категории",
         responses=GET_CURRENT_USER_RESPONSES,
 )
 async def get_summary_by_category_for_period(
@@ -53,9 +56,10 @@ async def get_summary_by_category_for_period(
     analytics_service: AnalyticService = Depends(get_analytic_service),
     current_user: User = Depends(get_current_member),
 ) -> AnalyticResponse:
-    """Получить данные об общих затратах/доходах."""
+    """Получить итоги и разбивку по категориям за период."""
     return await analytics_service.get_summary_by_category(
         date_from=analytic_request.date_from,
         date_to=analytic_request.date_to,
         user_id=current_user.id,
+        currency=analytic_request.currency,
     )
